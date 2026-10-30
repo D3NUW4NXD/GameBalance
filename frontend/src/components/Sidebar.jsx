@@ -89,8 +89,8 @@ const Sidebar = () => {
           type="button"
           ref={menuToggleRef}
           className="mobile-menu-toggle"
-          onClick={() => setMenuOpen(true)}
-          aria-label="Open navigation menu"
+          onClick={() => setMenuOpen((open) => !open)}
+          aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
           aria-expanded={menuOpen}
           aria-controls="gamebalance-sidebar"
         >
