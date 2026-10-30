@@ -1,5 +1,3 @@
-// Ensure the mobile navigation stylesheet is bundled with the application.
-import "./mobile.css";
 import { Navigate, Route, Routes } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";

@@ -1,7 +1,5 @@
-:root { --gb-mobile-patch: "v2"; }
-
-/* GameBalance Mobile Responsive v2.
-   Loaded after desktop styles.css. Fixes mobile drawer stacking on small screens. */
+/* GameBalance: mobile and tablet layout.
+   Loaded after styles.css; desktop appearance stays unchanged. */
 
 *,
 *::before,
@@ -72,19 +70,16 @@ textarea {
     min-height: 100dvh;
   }
 
-  .dashboard-page > .mobile-topbar {
+  .mobile-topbar {
     position: sticky;
     top: 0;
     z-index: 1100;
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    align-items: center !important;
-    justify-content: space-between !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: 12px;
     width: 100%;
     min-height: 64px;
-    max-height: 72px;
     padding: 10px 18px;
     border-bottom: 1px solid rgba(255, 19, 57, 0.26);
     background: rgba(11, 10, 12, 0.97);
@@ -96,7 +91,6 @@ textarea {
     align-items: center;
     gap: 10px;
     min-width: 0;
-    flex: 0 1 auto;
     color: #f4f1f2;
     font-family: 'Orbitron', sans-serif;
     font-size: clamp(14px, 3.7vw, 19px);
@@ -125,10 +119,6 @@ textarea {
     cursor: pointer;
   }
 
-  .dashboard-page > .mobile-topbar .mobile-menu-toggle {
-    margin-left: auto;
-  }
-
   .mobile-menu-backdrop {
     position: fixed;
     inset: 0;
@@ -142,15 +132,15 @@ textarea {
     cursor: pointer;
   }
 
-  .dashboard-page > aside.sidebar {
-    position: fixed !important;
+  .dashboard-page > .sidebar {
+    position: fixed;
     top: 0;
     left: 0;
     z-index: 1300;
-    width: min(310px, 86vw) !important;
-    height: 100dvh !important;
+    width: min(320px, 86vw);
+    height: 100dvh;
     min-height: 0;
-    max-height: 100dvh !important;
+    max-height: 100dvh;
     margin: 0;
     padding: 22px 18px;
     overflow: hidden;
@@ -161,14 +151,13 @@ textarea {
     transform: translateX(-105%);
     visibility: hidden;
     pointer-events: none;
-    transition: transform 0.23s ease, visibility 0s linear 0.23s;
+    transition: transform 0.23s ease, visibility 0.23s;
   }
 
-  .dashboard-page > aside.sidebar.sidebar--open {
+  .dashboard-page > .sidebar.sidebar--open {
     transform: translateX(0);
     visibility: visible;
     pointer-events: auto;
-    transition: transform 0.23s ease, visibility 0s linear 0s;
   }
 
   .sidebar .sidebar-brand {
@@ -279,26 +268,6 @@ textarea {
   .alert-item {
     overflow-wrap: anywhere;
   }
-
-  .recharts-responsive-container,
-  .recharts-wrapper,
-  .chart-panel,
-  .panel,
-  .profile-page,
-  .admin-command-page {
-    min-width: 0;
-    max-width: 100%;
-  }
-
-  .profile-command-page .profile-command-hero,
-  .profile-command-page .profile-edit-grid {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-
-  .admin-command-page .admin-risk-filters {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
 }
 
 @media (max-width: 600px) {
@@ -421,25 +390,6 @@ textarea {
     right: 10px;
   }
 
-  .sidebar .sidebar-brand {
-    font-size: 14px;
-  }
-
-  .sidebar .sidebar-brand span {
-    overflow-wrap: anywhere;
-  }
-
-  .dashboard-page > .mobile-topbar {
-    padding-inline: 14px;
-  }
-
-  .admin-risk-page-controls,
-  .admin-risk-pagination,
-  .admin-risk-results-bar {
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
   /* Prevent iOS from zooming in when a form field is focused. */
   input,
   select,
@@ -450,8 +400,7 @@ textarea {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dashboard-page > aside.sidebar,
-  .dashboard-page > aside.sidebar.sidebar--open {
-    transition: none !important;
+  .dashboard-page > .sidebar {
+    transition: none;
   }
 }
