@@ -1,7 +1,10 @@
+
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
+
 const router = express.Router();
 
 const {
@@ -16,16 +19,24 @@ const {
 
 const { protect } = require("../middleware/authMiddleware");
 
-const uploadPath = path.join(__dirname, "..", "uploads", "profile");
+// Use a writable temporary folder for Netlify Functions.
+// On a local computer, this uses the system's temp directory.
+const uploadPath = path.join(
+  os.tmpdir(),
+  "gamebalance",
+  "uploads",
+  "profile"
+);
 
-if (!fs.existsSync(uploadPath)) {
-  fs.mkdirSync(uploadPath, { recursive: true });
-}
+// Create the directory if it does not exist.
+fs.mkdirSync(uploadPath, { recursive: true });
 
+// Configure profile image storage.
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadPath);
   },
+
   filename: (req, file, cb) => {
     const extension = path.extname(file.originalname).toLowerCase();
     const fileName = `user_${req.user.user_id}_${Date.now()}${extension}`;
@@ -33,16 +44,25 @@ const storage = multer.diskStorage({
   },
 });
 
+// Allow only supported profile image types.
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+  const allowedTypes = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+  ];
 
   if (!allowedTypes.includes(file.mimetype)) {
-    return cb(new Error("Only JPG, PNG, and WEBP image files are allowed"));
+    return cb(
+      new Error("Only JPG, PNG, and WEBP image files are allowed")
+    );
   }
 
   cb(null, true);
 };
 
+// Set upload limits.
 const upload = multer({
   storage,
   fileFilter,
@@ -51,6 +71,7 @@ const upload = multer({
   },
 });
 
+// Handle Multer upload errors.
 const uploadProfileMiddleware = (req, res, next) => {
   upload.single("profile_image")(req, res, (error) => {
     if (error instanceof multer.MulterError) {
@@ -74,18 +95,27 @@ const uploadProfileMiddleware = (req, res, next) => {
   });
 };
 
+// Public authentication routes.
 router.post("/register", register);
 router.post("/login", login);
 
+// Protected profile routes.
 router.get("/profile", protect, getProfile);
 router.put("/profile", protect, updateProfile);
+
 router.put(
   "/profile/image",
   protect,
   uploadProfileMiddleware,
   uploadProfileImage
 );
-router.delete("/profile/image", protect, deleteProfileImage);
+
+router.delete(
+  "/profile/image",
+  protect,
+  deleteProfileImage
+);
+
 router.put("/change-password", protect, changePassword);
 
 module.exports = router;
