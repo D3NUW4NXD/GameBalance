@@ -1,0 +1,23 @@
+# Put this file in the repository root, next to backend/ and frontend/.
+# Overrides the old Netlify UI base-directory setting (frontend).
+[build]
+  base = "."
+  command = "npm --prefix backend install && npm --prefix frontend install && npm --prefix frontend run build"
+  publish = "frontend/dist"
+  functions = "backend/netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["bcrypt", "mysql2"]
+
+# API rule must come before the single-page app fallback.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

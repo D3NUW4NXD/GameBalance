@@ -1,0 +1,43 @@
+GAMEBALANCE NETLIFY DEPLOYMENT PATCH
+===================================
+All changes must be made only in your GameBalance_PublicCopy, NOT the working GameBalance folder.
+
+1. Copy files from this ZIP into your GameBalance_PublicCopy directory,
+   maintaining the subfolder paths and replacing the 2 specified files.
+2. Remove frontend/public/_redirects from the publishing copy if it contains
+   a catch-all SPA rule. The root netlify.toml already handles all routing.
+3. In PowerShell:
+     cd C:\Users\User\Desktop\GameBalance_PublicCopy\backend
+     npm install serverless-http
+     cd ..
+     git add backend/server.js backend/config/db.js backend/netlify/functions/api.js backend/package.json backend/package-lock.json netlify.toml
+     git add -u frontend/public/_redirects
+     git commit -m "Deploy GameBalance API via Netlify Functions"
+     git push origin main
+
+4. In Netlify Project configuration > Environment variables, set:
+     DB_HOST       = Aiven service hostname
+     DB_PORT       = Aiven port
+     DB_USER       = Aiven username
+     DB_PASSWORD   = Aiven password
+     DB_NAME       = defaultdb
+     JWT_SECRET    = new long random secret
+     DB_SSL_CA_B64 = base64-encoded Aiven project CA certificate
+     VITE_API_URL  = /api  (ONLY if frontend reads VITE_API_URL)
+
+   Generate CA base64 in Windows PowerShell (edit path as necessary):
+     [Convert]::ToBase64String([IO.File]::ReadAllBytes("$env:USERPROFILE\Downloads\ca.pem")) | Set-Clipboard
+   Paste clipboard content into Netlify DB_SSL_CA_B64 variable. NEVER commit the CA file,
+   credentials or any .env files to GitHub.
+5. Trigger a fresh Netlify deploy after environment variables are saved.
+6. Check https://YOUR-SITE.netlify.app/api/health/db . Expected database=defaultdb.
+7. Check registration and login. Profile-image upload routes using local disk will
+   need separate storage: Netlify Functions have no persistent writable uploads directory.
+
+NOTES:
+- If Netlify build fails on a native Node module or dynamic import, check deploy
+  logs; package-specific bundling adjustments may be needed.
+- If the backend has extra environment variables, configure those too.
+- Verify Aiven CA is the correct CA for the service and that TLS identity checks succeed.
+- If your frontend doesn't use VITE_API_URL, its API client code may also need
+  changing to use /api for same-origin requests.
