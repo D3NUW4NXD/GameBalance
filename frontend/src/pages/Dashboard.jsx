@@ -204,9 +204,11 @@ const Dashboard = () => {
 
           <NotificationBell />
 
+          
           <div className="user-pill">
-            {user?.role}
+            {user?.full_name || "User"}
           </div>
+
 
         </div>
       </header>
