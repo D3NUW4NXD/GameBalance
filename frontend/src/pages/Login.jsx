@@ -58,15 +58,12 @@ const Login = () => {
 
       await login(email, formData.password);
 
-      // Global notification system displays:
-      // Login Successful
+      // Login Successful notification
+      // is handled by your global system.
 
       navigate("/dashboard", { replace: true });
     } catch (error) {
       console.error("Login failed:", error);
-
-      // Global Axios notification system displays:
-      // Login Failed
     } finally {
       setLoading(false);
     }
@@ -75,6 +72,7 @@ const Login = () => {
   return (
     <div className="auth-page">
       <div className="auth-card">
+
         <div className="brand">
           <div className="brand-icon">
             <Gamepad2 size={34} />
@@ -133,6 +131,13 @@ const Login = () => {
             />
           </div>
 
+          {/* Forgot Password Link */}
+          <div className="forgot-password-row">
+            <Link to="/forgot-password">
+              Forgot Password?
+            </Link>
+          </div>
+
           <button
             type="submit"
             disabled={loading}
@@ -146,6 +151,7 @@ const Login = () => {
               Create account
             </Link>
           </p>
+
         </form>
       </div>
     </div>

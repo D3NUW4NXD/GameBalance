@@ -1,27 +1,53 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+
+import {
+  Navigate,
+  Route,
+  Routes,
+} from "react-router-dom";
+
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+
 import Dashboard from "./pages/Dashboard";
 import GamingTracker from "./pages/GamingTracker";
 import StressMonitor from "./pages/StressMonitor";
 import SleepTracker from "./pages/SleepTracker";
 import RiskReports from "./pages/RiskReports";
-import AdminDashboard from "./pages/AdminDashboard";
 import WeeklyWellnessReport from "./pages/WeeklyWellnessReport";
+import Profile from "./pages/Profile";
+import AdminDashboard from "./pages/AdminDashboard";
+
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import AppLayout from "./components/AppLayout";
-import Profile from "./pages/Profile";
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
 
-      <Route path="/login" element={<Login />} />
+      {/* Public Pages */}
+      <Route
+        path="/"
+        element={<Navigate to="/login" replace />}
+      />
 
-      <Route path="/register" element={<Register />} />
+      <Route
+        path="/login"
+        element={<Login />}
+      />
 
+      <Route
+        path="/register"
+        element={<Register />}
+      />
+
+      <Route
+        path="/forgot-password"
+        element={<ForgotPassword />}
+      />
+
+      {/* User Dashboard */}
       <Route
         path="/dashboard"
         element={
@@ -31,6 +57,7 @@ function App() {
         }
       />
 
+      {/* Gaming Tracker */}
       <Route
         path="/gaming"
         element={
@@ -42,6 +69,7 @@ function App() {
         }
       />
 
+      {/* Stress Monitor */}
       <Route
         path="/stress"
         element={
@@ -53,6 +81,7 @@ function App() {
         }
       />
 
+      {/* Sleep Tracker */}
       <Route
         path="/sleep"
         element={
@@ -64,6 +93,7 @@ function App() {
         }
       />
 
+      {/* Risk Reports */}
       <Route
         path="/risk"
         element={
@@ -75,6 +105,7 @@ function App() {
         }
       />
 
+      {/* Weekly Report */}
       <Route
         path="/weekly-report"
         element={
@@ -86,16 +117,19 @@ function App() {
         }
       />
 
+      {/* User Profile */}
       <Route
-  path="/profile"
-  element={
-    <ProtectedRoute>
-      <AppLayout>
-        <Profile />
-      </AppLayout>
-    </ProtectedRoute>
-  }
-/>
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <Profile />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Admin Dashboard */}
       <Route
         path="/admin"
         element={
@@ -106,6 +140,7 @@ function App() {
           </AdminRoute>
         }
       />
+
     </Routes>
   );
 }
