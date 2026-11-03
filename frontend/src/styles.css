@@ -3700,3 +3700,119 @@ button.login-password-toggle svg {
     min-width: 0;
   }
 }
+
+
+/* ==========================================
+   GAMEBALANCE - LOGOUT AT FULL PAGE BOTTOM
+========================================== */
+
+@media (min-width: 901px) {
+
+  /* The sidebar and content must share
+     the height of the entire page */
+  .dashboard-page {
+    display: flex;
+    align-items: stretch !important;
+    min-height: 100vh;
+  }
+
+  /* Allow sidebar to grow with the content */
+  .dashboard-page > .sidebar {
+    position: static !important;
+    top: auto !important;
+
+    height: auto !important;
+    max-height: none !important;
+    min-height: 100vh;
+
+    align-self: stretch !important;
+    flex-shrink: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: visible !important;
+  }
+
+  /* Keep navigation links at the top */
+  .dashboard-page > .sidebar nav {
+    display: flex;
+    flex-direction: column;
+
+    flex: 0 0 auto !important;
+    overflow: visible !important;
+    padding-right: 0;
+  }
+
+  /* Move logout to the bottom of the page */
+  .dashboard-page > .sidebar .logout-btn {
+    margin-top: auto !important;
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  /* Let the main content determine page height */
+  .dashboard-page > .app-main {
+    flex: 1;
+    min-width: 0;
+    height: auto;
+  }
+}
+
+
+/* ==========================================
+   GAMEBALANCE - LOGOUT AT FULL PAGE BOTTOM
+========================================== */
+
+@media (min-width: 901px) {
+
+  /* The sidebar and content must share
+     the height of the entire page */
+  .dashboard-page {
+    display: flex;
+    align-items: stretch !important;
+    min-height: 100vh;
+  }
+
+  /* Allow sidebar to grow with the content */
+  .dashboard-page > .sidebar {
+    position: static !important;
+    top: auto !important;
+
+    height: auto !important;
+    max-height: none !important;
+    min-height: 100vh;
+
+    align-self: stretch !important;
+    flex-shrink: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: visible !important;
+  }
+
+  /* Keep navigation links at the top */
+  .dashboard-page > .sidebar nav {
+    display: flex;
+    flex-direction: column;
+
+    flex: 0 0 auto !important;
+    overflow: visible !important;
+    padding-right: 0;
+  }
+
+  /* Move logout to the bottom of the page */
+  .dashboard-page > .sidebar .logout-btn {
+    margin-top: auto !important;
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  /* Let the main content determine page height */
+  .dashboard-page > .app-main {
+    flex: 1;
+    min-width: 0;
+    height: auto;
+  }
+}
