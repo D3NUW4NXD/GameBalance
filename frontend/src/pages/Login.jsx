@@ -1,7 +1,13 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Gamepad2, Lock, Mail } from "lucide-react";
+import {
+  Gamepad2,
+  Lock,
+  Mail,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
@@ -18,6 +24,7 @@ const Login = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -58,10 +65,9 @@ const Login = () => {
 
       await login(email, formData.password);
 
-      // Login Successful notification
-      // is handled by your global system.
-
-      navigate("/dashboard", { replace: true });
+      navigate("/dashboard", {
+        replace: true,
+      });
     } catch (error) {
       console.error("Login failed:", error);
     } finally {
@@ -73,6 +79,7 @@ const Login = () => {
     <div className="auth-page">
       <div className="auth-card">
 
+        {/* GameBalance Branding */}
         <div className="brand">
           <div className="brand-icon">
             <Gamepad2 size={34} />
@@ -86,6 +93,7 @@ const Login = () => {
           </p>
         </div>
 
+        {/* Login Form */}
         <form
           onSubmit={handleSubmit}
           className="auth-form"
@@ -93,6 +101,7 @@ const Login = () => {
         >
           <h2>Login</h2>
 
+          {/* Email Address */}
           <label htmlFor="login-email">
             Email Address
           </label>
@@ -112,16 +121,21 @@ const Login = () => {
             />
           </div>
 
+          {/* Password Label */}
           <label htmlFor="login-password">
             Password
           </label>
 
-          <div className="input-group">
+          {/* Password Field with Eye Icon */}
+          <div className="input-group login-password-group">
+
             <Lock size={18} />
 
             <input
               id="login-password"
-              type="password"
+              type={
+                showPassword ? "text" : "password"
+              }
               name="password"
               value={formData.password}
               onChange={handleChange}
@@ -129,15 +143,43 @@ const Login = () => {
               autoComplete="current-password"
               required
             />
+
+            {/* Password Visibility Toggle */}
+            <button
+              type="button"
+              className="login-password-toggle"
+              onClick={() =>
+                setShowPassword((previous) => !previous)
+              }
+              aria-label={
+                showPassword
+                  ? "Hide password"
+                  : "Show password"
+              }
+              aria-pressed={showPassword}
+              title={
+                showPassword
+                  ? "Hide password"
+                  : "Show password"
+              }
+            >
+              {showPassword ? (
+                <EyeOff size={18} />
+              ) : (
+                <Eye size={18} />
+              )}
+            </button>
+
           </div>
 
-          {/* Forgot Password Link */}
+          {/* Forgot Password */}
           <div className="forgot-password-row">
             <Link to="/forgot-password">
               Forgot Password?
             </Link>
           </div>
 
+          {/* Login Button */}
           <button
             type="submit"
             disabled={loading}
@@ -145,6 +187,7 @@ const Login = () => {
             {loading ? "Logging in..." : "Login"}
           </button>
 
+          {/* Register */}
           <p className="auth-link">
             New user?{" "}
             <Link to="/register">
