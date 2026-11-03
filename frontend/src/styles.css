@@ -3598,3 +3598,45 @@ button.login-password-toggle svg {
   background: #10251c;
   border-color: #42b97c;
 }
+
+
+/* ==========================================
+   GAMEBALANCE SIDEBAR - FULL PAGE HEIGHT
+========================================== */
+
+.app-layout {
+  display: flex;
+  align-items: stretch;
+  min-height: 100vh;
+}
+
+/* Sidebar stretches with the page content */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  align-self: stretch;
+
+  height: auto;
+  min-height: 100vh;
+
+  position: relative;
+}
+
+/* Keep navigation at the top */
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Push Logout button to the very bottom */
+.sidebar .logout-btn {
+  margin-top: auto;
+  margin-bottom: 20px;
+}
+
+/* Main dashboard fills remaining width */
+.app-layout > main {
+  flex: 1;
+  min-width: 0;
+}
