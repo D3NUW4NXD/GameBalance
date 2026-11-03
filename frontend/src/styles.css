@@ -3640,3 +3640,63 @@ button.login-password-toggle svg {
   flex: 1;
   min-width: 0;
 }
+
+
+/* ============================================
+   GAMEBALANCE - FULL PAGE SIDEBAR FIX
+   LOGOUT AT BOTTOM OF ENTIRE PAGE
+============================================ */
+
+/* Desktop layout */
+@media (min-width: 901px) {
+
+  /* Stretch sidebar to match page content */
+  .dashboard-page {
+    display: flex;
+    align-items: stretch;
+    min-height: 100vh;
+  }
+
+  /* Remove old 100vh and sticky restrictions */
+  .dashboard-page > .sidebar {
+    position: relative;
+    top: auto;
+
+    height: auto;
+    max-height: none;
+    min-height: 100vh;
+
+    align-self: stretch;
+    flex-shrink: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: visible;
+  }
+
+  /* Navigation stays at the top */
+  .dashboard-page > .sidebar nav {
+    display: flex;
+    flex-direction: column;
+
+    flex: 0 0 auto;
+
+    overflow-y: visible;
+    padding-right: 0;
+  }
+
+  /* Logout goes to the bottom of the page */
+  .dashboard-page > .sidebar .logout-btn {
+    margin-top: auto;
+    margin-bottom: 0;
+
+    flex-shrink: 0;
+  }
+
+  /* Main content can determine page height */
+  .dashboard-page > .app-main {
+    flex: 1;
+    min-width: 0;
+  }
+}
