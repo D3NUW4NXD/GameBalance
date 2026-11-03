@@ -1,59 +1,124 @@
-import { createContext, useContext, useEffect, useState } from "react";
+
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+
 import api from "../api/api";
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // LOGIN
   const login = async (email, password) => {
     const response = await api.post("/auth/login", {
       email,
       password,
     });
 
-    localStorage.setItem("gamebalance_token", response.data.token);
-    setUser(response.data.user);
+    const loggedInUser = response.data.user;
+
+    localStorage.setItem(
+      "gamebalance_token",
+      response.data.token
+    );
+
+    localStorage.setItem(
+      "gamebalance_user",
+      JSON.stringify(loggedInUser)
+    );
+
+    setUser(loggedInUser);
 
     return response.data;
   };
 
+  // REGISTER
   const register = async (formData) => {
-    const response = await api.post("/auth/register", formData);
+    const response = await api.post(
+      "/auth/register",
+      formData
+    );
+
     return response.data;
   };
 
+  // LOGOUT
   const logout = () => {
     localStorage.removeItem("gamebalance_token");
+    localStorage.removeItem("gamebalance_user");
+
     setUser(null);
+    setLoading(false);
   };
 
+  // LOAD LATEST USER PROFILE
   const loadProfile = async () => {
-    try {
-      const token = localStorage.getItem("gamebalance_token");
+    const token = localStorage.getItem(
+      "gamebalance_token"
+    );
 
-      if (!token) {
-        setLoading(false);
-        return;
+    if (!token) {
+      localStorage.removeItem("gamebalance_user");
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await api.get("/auth/profile");
+
+      const updatedUser = response.data.user;
+
+      if (!updatedUser) {
+        throw new Error("Profile data missing");
       }
 
-      const response = await api.get("/auth/profile");
-      setUser(response.data.user);
+      setUser(updatedUser);
+
+      localStorage.setItem(
+        "gamebalance_user",
+        JSON.stringify(updatedUser)
+      );
     } catch (error) {
-      localStorage.removeItem("gamebalance_token");
-      setUser(null);
+      console.error("Profile loading failed:", error);
+
+      // Only clear the session when authentication
+      // is actually rejected.
+      if (
+        error.response?.status === 401 ||
+        error.response?.status === 403
+      ) {
+        localStorage.removeItem("gamebalance_token");
+        localStorage.removeItem("gamebalance_user");
+        setUser(null);
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  // CHECK SESSION ON PAGE LOAD
   useEffect(() => {
     loadProfile();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        register,
+        logout,
+        loadProfile,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
