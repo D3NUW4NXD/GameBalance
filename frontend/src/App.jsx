@@ -8,6 +8,7 @@ import {
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 import Dashboard from "./pages/Dashboard";
 import GamingTracker from "./pages/GamingTracker";
@@ -21,6 +22,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import AppLayout from "./components/AppLayout";
+
+
 
 function App() {
   return (
@@ -46,6 +49,13 @@ function App() {
         path="/forgot-password"
         element={<ForgotPassword />}
       />
+
+      
+      <Route
+        path="/reset-password"
+        element={<ResetPassword />}
+      />
+
 
       {/* User Dashboard */}
       <Route
