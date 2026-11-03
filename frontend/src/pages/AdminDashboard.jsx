@@ -627,7 +627,7 @@ const AdminDashboard = () => {
                     <td>
                       <span
                         className={`level ${
-                          user.role === "ADMIN"
+                          ["ADMIN", "SUPER_ADMIN"].includes(user.role)
                             ? "high"
                             : "low"
                         }`}

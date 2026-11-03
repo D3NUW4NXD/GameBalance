@@ -1,3 +1,4 @@
+
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   BarChart3,
@@ -7,9 +8,11 @@ import {
   LogOut,
   Moon,
   Shield,
+  ShieldCheck,
   Brain,
   User,
 } from "lucide-react";
+
 import { useAuth } from "../context/AuthContext";
 
 const Sidebar = () => {
@@ -71,10 +74,19 @@ const Sidebar = () => {
           Profile
         </NavLink>
 
-        {user?.role === "ADMIN" && (
+        {/* ADMIN + SUPER ADMIN */}
+        {["ADMIN", "SUPER_ADMIN"].includes(user?.role) && (
           <NavLink to="/admin">
             <Shield size={16} />
             Admin Panel
+          </NavLink>
+        )}
+
+        {/* SUPER ADMIN ONLY */}
+        {user?.role === "SUPER_ADMIN" && (
+          <NavLink to="/admin/staff">
+            <ShieldCheck size={16} />
+            Manage Admins
           </NavLink>
         )}
       </nav>

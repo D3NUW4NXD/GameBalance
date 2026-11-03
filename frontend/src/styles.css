@@ -3422,3 +3422,179 @@ button.login-password-toggle svg {
   width: 18px !important;
   height: 18px !important;
 }
+
+
+/* =========================================
+   GAMEBALANCE SUPER ADMIN
+========================================= */
+
+.staff-page {
+  max-width: 1250px;
+  margin: 0 auto;
+}
+
+.staff-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #ff4d6a;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.staff-back-link {
+  color: #ff4d6a;
+  font-weight: 700;
+}
+
+.staff-panel {
+  background: #141216;
+  border: 1px solid #44202a;
+  border-radius: 7px;
+  margin: 24px 0;
+  padding: 24px;
+}
+
+.staff-panel h2 {
+  color: #f4f1f2;
+  font-size: 19px;
+  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.staff-panel p {
+  color: #a89ba0;
+}
+
+.staff-form {
+  display: grid;
+  max-width: 520px;
+  gap: 9px;
+}
+
+.staff-form label {
+  color: #c8bec2;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+.staff-form input {
+  width: 100%;
+  min-height: 43px;
+  padding: 10px 12px;
+  background: #0b0a0c;
+  border: 1px solid #453239;
+  border-radius: 5px;
+  color: #f4f1f2;
+  font: inherit;
+}
+
+.staff-form input:focus {
+  outline: 2px solid #ff1339;
+  outline-offset: 1px;
+}
+
+.staff-form button,
+.staff-table button,
+.staff-refresh {
+  border: 1px solid #ff3355;
+  background: #ab102c;
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  padding: 10px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.staff-form button {
+  margin-top: 10px;
+}
+
+.staff-form button:disabled,
+.staff-table button:disabled,
+.staff-refresh:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.staff-form button:hover:not(:disabled),
+.staff-table button:hover:not(:disabled) {
+  background: #e41239;
+}
+
+.staff-table .staff-demote {
+  background: transparent;
+  color: #ff768b;
+}
+
+.staff-hint {
+  font-size: 13px;
+}
+
+.staff-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.staff-refresh {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.staff-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.staff-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 610px;
+}
+
+.staff-table th,
+.staff-table td {
+  padding: 12px;
+  border-bottom: 1px solid #39262d;
+  text-align: left;
+}
+
+.staff-table th {
+  color: #c7b7be;
+}
+
+.staff-role {
+  font-weight: 800;
+  color: #f4f1f2;
+}
+
+.staff-protected {
+  color: #88c9a0;
+  font-weight: 700;
+}
+
+.staff-message {
+  padding: 12px 15px;
+  border-radius: 5px;
+  border-left: 3px solid;
+}
+
+.staff-error {
+  color: #ff8ca1;
+  background: #310e18;
+  border-color: #ff1339;
+}
+
+.staff-success {
+  color: #8cd7a6;
+  background: #10251c;
+  border-color: #42b97c;
+}

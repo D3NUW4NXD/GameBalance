@@ -18,10 +18,13 @@ import RiskReports from "./pages/RiskReports";
 import WeeklyWellnessReport from "./pages/WeeklyWellnessReport";
 import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
+import ManageAdmins from "./pages/ManageAdmins";
+
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import AppLayout from "./components/AppLayout";
+import SuperAdminRoute from "./components/SuperAdminRoute";
 
 
 
@@ -150,6 +153,19 @@ function App() {
           </AdminRoute>
         }
       />
+
+      
+    <Route
+      path="/admin/staff"
+      element={
+        <SuperAdminRoute>
+          <AppLayout>
+            <ManageAdmins />
+          </AppLayout>
+        </SuperAdminRoute>
+      }
+/>
+
 
     </Routes>
   );
