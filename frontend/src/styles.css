@@ -3649,3 +3649,48 @@ button.login-password-toggle svg {
     min-width: 0;
   }
 }
+
+
+/* ===== FINAL FIX: ALWAYS VISIBLE LOGOUT ===== */
+
+@media (min-width: 901px) {
+  .dashboard-page {
+    display: flex !important;
+    align-items: flex-start !important;
+    min-height: 100vh;
+  }
+
+  .dashboard-page > .sidebar {
+    position: sticky !important;
+    top: 0 !important;
+    height: 100vh !important;
+    min-height: 0 !important;
+    max-height: 100vh !important;
+    align-self: flex-start !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
+  }
+
+  .dashboard-page > .sidebar .sidebar-brand {
+    flex-shrink: 0 !important;
+  }
+
+  .dashboard-page > .sidebar nav {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+  }
+
+  .dashboard-page > .sidebar .logout-btn {
+    display: flex !important;
+    position: relative !important;
+    margin-top: auto !important;
+    margin-bottom: 0 !important;
+    flex-shrink: 0 !important;
+    width: 100%;
+    min-height: 46px;
+  }
+}
