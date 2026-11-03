@@ -1,7 +1,13 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Gamepad2, Lock, Mail } from "lucide-react";
+import {
+  Gamepad2,
+  Lock,
+  Mail,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
@@ -18,6 +24,7 @@ const Login = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -26,6 +33,10 @@ const Login = () => {
       ...previous,
       [name]: value,
     }));
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword((previous) => !previous);
   };
 
   const handleSubmit = async (event) => {
@@ -75,6 +86,8 @@ const Login = () => {
   return (
     <div className="auth-page">
       <div className="auth-card">
+
+        {/* Logo and Branding */}
         <div className="brand">
           <div className="brand-icon">
             <Gamepad2 size={34} />
@@ -88,6 +101,7 @@ const Login = () => {
           </p>
         </div>
 
+        {/* Login Form */}
         <form
           onSubmit={handleSubmit}
           className="auth-form"
@@ -95,6 +109,7 @@ const Login = () => {
         >
           <h2>Login</h2>
 
+          {/* Email Address */}
           <label htmlFor="login-email">
             Email Address
           </label>
@@ -114,6 +129,7 @@ const Login = () => {
             />
           </div>
 
+          {/* Password */}
           <label htmlFor="login-password">
             Password
           </label>
@@ -123,7 +139,7 @@ const Login = () => {
 
             <input
               id="login-password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               value={formData.password}
               onChange={handleChange}
@@ -131,8 +147,43 @@ const Login = () => {
               autoComplete="current-password"
               required
             />
+
+            {/* Show / Hide Password */}
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={togglePasswordVisibility}
+              aria-label={
+                showPassword
+                  ? "Hide password"
+                  : "Show password"
+              }
+              aria-pressed={showPassword}
+              title={
+                showPassword
+                  ? "Hide password"
+                  : "Show password"
+              }
+            >
+              {showPassword ? (
+                <EyeOff size={20} />
+              ) : (
+                <Eye size={20} />
+              )}
+            </button>
           </div>
 
+          {/* Forgot Password */}
+          <div className="forgot-password-container">
+            <Link
+              to="/forgot-password"
+              className="forgot-password-link"
+            >
+              Forgot Password?
+            </Link>
+          </div>
+
+          {/* Login Button */}
           <button
             type="submit"
             disabled={loading}
@@ -140,6 +191,7 @@ const Login = () => {
             {loading ? "Logging in..." : "Login"}
           </button>
 
+          {/* Register Link */}
           <p className="auth-link">
             New user?{" "}
             <Link to="/register">

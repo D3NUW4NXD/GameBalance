@@ -3151,3 +3151,46 @@ a {
     flex-wrap: wrap;
   }
 }
+
+
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-wrapper input {
+  width: 100%;
+  padding-right: 45px;
+}
+
+.password-eye {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-eye:hover {
+  color: #ff1744;
+}
+
+.forgot-password-link {
+  display: block;
+  text-align: right;
+  margin: 10px 0 18px;
+  color: #ff1744;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.forgot-password-link:hover {
+  text-decoration: underline;
+}
