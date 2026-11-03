@@ -20,19 +20,16 @@ import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
 import ManageAdmins from "./pages/ManageAdmins";
 
-
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import AppLayout from "./components/AppLayout";
 import SuperAdminRoute from "./components/SuperAdminRoute";
 
-
-
 function App() {
   return (
     <Routes>
+      {/* PUBLIC PAGES */}
 
-      {/* Public Pages */}
       <Route
         path="/"
         element={<Navigate to="/login" replace />}
@@ -53,24 +50,26 @@ function App() {
         element={<ForgotPassword />}
       />
 
-      
       <Route
         path="/reset-password"
         element={<ResetPassword />}
       />
 
+      {/* DASHBOARD - SHARED SIDEBAR */}
 
-      {/* User Dashboard */}
       <Route
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <AppLayout>
+              <Dashboard />
+            </AppLayout>
           </ProtectedRoute>
         }
       />
 
-      {/* Gaming Tracker */}
+      {/* GAMING TRACKER */}
+
       <Route
         path="/gaming"
         element={
@@ -82,7 +81,8 @@ function App() {
         }
       />
 
-      {/* Stress Monitor */}
+      {/* STRESS MONITOR */}
+
       <Route
         path="/stress"
         element={
@@ -94,7 +94,8 @@ function App() {
         }
       />
 
-      {/* Sleep Tracker */}
+      {/* SLEEP TRACKER */}
+
       <Route
         path="/sleep"
         element={
@@ -106,7 +107,8 @@ function App() {
         }
       />
 
-      {/* Risk Reports */}
+      {/* RISK REPORTS */}
+
       <Route
         path="/risk"
         element={
@@ -118,7 +120,8 @@ function App() {
         }
       />
 
-      {/* Weekly Report */}
+      {/* WEEKLY REPORT */}
+
       <Route
         path="/weekly-report"
         element={
@@ -130,7 +133,8 @@ function App() {
         }
       />
 
-      {/* User Profile */}
+      {/* PROFILE */}
+
       <Route
         path="/profile"
         element={
@@ -142,7 +146,8 @@ function App() {
         }
       />
 
-      {/* Admin Dashboard */}
+      {/* ADMIN PANEL */}
+
       <Route
         path="/admin"
         element={
@@ -154,19 +159,18 @@ function App() {
         }
       />
 
-      
-    <Route
-      path="/admin/staff"
-      element={
-        <SuperAdminRoute>
-          <AppLayout>
-            <ManageAdmins />
-          </AppLayout>
-        </SuperAdminRoute>
-      }
-/>
+      {/* SUPER ADMIN MANAGEMENT */}
 
-
+      <Route
+        path="/admin/staff"
+        element={
+          <SuperAdminRoute>
+            <AppLayout>
+              <ManageAdmins />
+            </AppLayout>
+          </SuperAdminRoute>
+        }
+      />
     </Routes>
   );
 }
