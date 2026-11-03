@@ -3364,3 +3364,61 @@ a {
   color: #ff8196;
   text-decoration: underline;
 }
+
+
+/* Password eye visibility fix */
+
+.auth-form .input-group.login-password-group {
+  position: relative;
+}
+
+.auth-form .login-password-group input {
+  min-width: 0;
+  padding-right: 48px;
+}
+
+.auth-form .login-password-group
+button.login-password-toggle {
+  position: absolute !important;
+  right: 8px !important;
+  top: 50% !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  transform: translateY(-50%) !important;
+
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+
+  color: #aaa !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.auth-form .login-password-group
+button.login-password-toggle:hover {
+  color: #ff3355 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.auth-form .login-password-group
+button.login-password-toggle svg {
+  display: block !important;
+  width: 18px !important;
+  height: 18px !important;
+}
