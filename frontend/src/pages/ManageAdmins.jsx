@@ -9,6 +9,23 @@ import {
 
 import api from "../api/api";
 
+// Display the response from the backend instead of hiding the reason
+// when a staff-management request is rejected.
+const describeError = (error, fallback) => {
+  const status = error?.response?.status;
+  const message = error?.response?.data?.message;
+
+  if (status) {
+    return `HTTP ${status}: ${message || fallback}`;
+  }
+
+  if (error?.request) {
+    return "Could not contact the GameBalance API. Check your connection and deployment.";
+  }
+
+  return message || fallback;
+};
+
 const ManageAdmins = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,10 +49,7 @@ const ManageAdmins = () => {
       const response = await api.get("/admin/users");
       setUsers(response.data.users || []);
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-        "Could not load users"
-      );
+      setError(describeError(err, "Could not load users"));
     } finally {
       setLoading(false);
     }
@@ -74,10 +88,7 @@ const ManageAdmins = () => {
 
       await refresh();
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-        "Could not create admin"
-      );
+      setError(describeError(err, "Could not create admin"));
     } finally {
       setBusy(false);
     }
@@ -106,16 +117,19 @@ const ManageAdmins = () => {
         { role }
       );
 
-      setNotice(
-        `${user.full_name}: role updated to ${role}`
+      // Backend confirmed the change; update the table immediately.
+      // The Refresh button remains available to re-read MySQL.
+      setUsers((previousUsers) =>
+        previousUsers.map((entry) =>
+          entry.user_id === user.user_id
+            ? { ...entry, role }
+            : entry
+        )
       );
 
-      await refresh();
+      setNotice(`${user.full_name}: role updated to ${role}`);
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-        "Could not change role"
-      );
+      setError(describeError(err, "Could not change role"));
     } finally {
       setBusy(false);
     }

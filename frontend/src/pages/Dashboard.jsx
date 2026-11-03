@@ -4,16 +4,10 @@ import { useEffect, useState } from "react";
 import {
   Activity,
   AlertTriangle,
-  BarChart3,
   Brain,
-  FileText,
   Gamepad2,
-  LayoutDashboard,
-  LogOut,
   Moon,
-  Shield,
   ShieldAlert,
-  User,
 } from "lucide-react";
 
 import {
@@ -36,9 +30,10 @@ import api from "../api/api";
 
 // New MySQL-backed notification bell
 import NotificationBell from "../components/NotificationBell";
+import Sidebar from "../components/Sidebar";
 
 const Dashboard = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   const [gamingSummary, setGamingSummary] = useState(null);
   const [gamingTrend, setGamingTrend] = useState([]);
@@ -91,11 +86,6 @@ const Dashboard = () => {
     loadDashboardData();
   }, []);
 
-  // Logout
-  const handleLogout = () => {
-    logout();
-    window.location.href = "/login";
-  };
 
   // Gaming chart
   const gamingChartData = gamingTrend
@@ -152,72 +142,8 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-page">
-      {/* ==================================
-          SIDEBAR NAVIGATION
-          ================================== */}
-
-      <aside className="sidebar">
-        <div className="sidebar-brand">
-          <Gamepad2 size={24} />
-          <span>GameBalance</span>
-        </div>
-
-        <nav>
-          <Link
-            to="/dashboard"
-            className="active"
-          >
-            <LayoutDashboard size={16} />
-            Dashboard
-          </Link>
-
-          <Link to="/gaming">
-            <Gamepad2 size={16} />
-            Gaming Tracker
-          </Link>
-
-          <Link to="/stress">
-            <Brain size={16} />
-            Stress Monitor
-          </Link>
-
-          <Link to="/sleep">
-            <Moon size={16} />
-            Sleep Tracker
-          </Link>
-
-          <Link to="/risk">
-            <BarChart3 size={16} />
-            Risk Reports
-          </Link>
-
-          <Link to="/weekly-report">
-            <FileText size={16} />
-            Weekly Report
-          </Link>
-
-          <Link to="/profile">
-            <User size={16} />
-            Profile
-          </Link>
-
-          {user?.role === "ADMIN" && (
-            <Link to="/admin">
-              <Shield size={16} />
-              Admin Panel
-            </Link>
-          )}
-        </nav>
-
-        <button
-          type="button"
-          className="logout-btn"
-          onClick={handleLogout}
-        >
-          <LogOut size={18} />
-          Logout
-        </button>
-      </aside>
+      {/* Shared navigation used across every protected page */}
+      <Sidebar />
 
       {/* ==================================
           DASHBOARD CONTENT
