@@ -3599,220 +3599,53 @@ button.login-password-toggle svg {
   border-color: #42b97c;
 }
 
-
-/* ==========================================
-   GAMEBALANCE SIDEBAR - FULL PAGE HEIGHT
-========================================== */
-
-.app-layout {
-  display: flex;
-  align-items: stretch;
-  min-height: 100vh;
-}
-
-/* Sidebar stretches with the page content */
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  align-self: stretch;
-
-  height: auto;
-  min-height: 100vh;
-
-  position: relative;
-}
-
-/* Keep navigation at the top */
-.sidebar nav {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Push Logout button to the very bottom */
-.sidebar .logout-btn {
-  margin-top: auto;
-  margin-bottom: 20px;
-}
-
-/* Main dashboard fills remaining width */
-.app-layout > main {
-  flex: 1;
-  min-width: 0;
-}
-
-
 /* ============================================
-   GAMEBALANCE - FULL PAGE SIDEBAR FIX
-   LOGOUT AT BOTTOM OF ENTIRE PAGE
+   GAMEBALANCE - STICKY DESKTOP SIDEBAR
+   Keep Logout visible at bottom of viewport
 ============================================ */
-
-/* Desktop layout */
 @media (min-width: 901px) {
-
-  /* Stretch sidebar to match page content */
-  .dashboard-page {
+  .dashboard-page,
+  .app-layout {
     display: flex;
-    align-items: stretch;
+    align-items: flex-start;
     min-height: 100vh;
   }
 
-  /* Remove old 100vh and sticky restrictions */
-  .dashboard-page > .sidebar {
-    position: relative;
-    top: auto;
-
-    height: auto;
-    max-height: none;
-    min-height: 100vh;
-
-    align-self: stretch;
+  .dashboard-page > .sidebar,
+  .app-layout > .sidebar {
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    min-height: 0;
+    max-height: 100vh;
+    overflow: hidden;
     flex-shrink: 0;
-
-    display: flex;
-    flex-direction: column;
-
-    overflow: visible;
   }
 
-  /* Navigation stays at the top */
-  .dashboard-page > .sidebar nav {
+  .dashboard-page > .sidebar nav,
+  .app-layout > .sidebar nav {
     display: flex;
     flex-direction: column;
-
-    flex: 0 0 auto;
-
-    overflow-y: visible;
-    padding-right: 0;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 4px;
   }
 
-  /* Logout goes to the bottom of the page */
-  .dashboard-page > .sidebar .logout-btn {
+  .dashboard-page > .sidebar .logout-btn,
+  .app-layout > .sidebar .logout-btn {
     margin-top: auto;
     margin-bottom: 0;
-
     flex-shrink: 0;
   }
 
-  /* Main content can determine page height */
-  .dashboard-page > .app-main {
+  .dashboard-page > .app-main,
+  .app-layout > .app-main,
+  .app-layout > main {
     flex: 1;
     min-width: 0;
-  }
-}
-
-
-/* ==========================================
-   GAMEBALANCE - LOGOUT AT FULL PAGE BOTTOM
-========================================== */
-
-@media (min-width: 901px) {
-
-  /* The sidebar and content must share
-     the height of the entire page */
-  .dashboard-page {
-    display: flex;
-    align-items: stretch !important;
-    min-height: 100vh;
-  }
-
-  /* Allow sidebar to grow with the content */
-  .dashboard-page > .sidebar {
-    position: static !important;
-    top: auto !important;
-
-    height: auto !important;
-    max-height: none !important;
-    min-height: 100vh;
-
-    align-self: stretch !important;
-    flex-shrink: 0;
-
-    display: flex;
-    flex-direction: column;
-
-    overflow: visible !important;
-  }
-
-  /* Keep navigation links at the top */
-  .dashboard-page > .sidebar nav {
-    display: flex;
-    flex-direction: column;
-
-    flex: 0 0 auto !important;
-    overflow: visible !important;
-    padding-right: 0;
-  }
-
-  /* Move logout to the bottom of the page */
-  .dashboard-page > .sidebar .logout-btn {
-    margin-top: auto !important;
-    margin-bottom: 0;
-    flex-shrink: 0;
-  }
-
-  /* Let the main content determine page height */
-  .dashboard-page > .app-main {
-    flex: 1;
-    min-width: 0;
-    height: auto;
-  }
-}
-
-
-/* ==========================================
-   GAMEBALANCE - LOGOUT AT FULL PAGE BOTTOM
-========================================== */
-
-@media (min-width: 901px) {
-
-  /* The sidebar and content must share
-     the height of the entire page */
-  .dashboard-page {
-    display: flex;
-    align-items: stretch !important;
-    min-height: 100vh;
-  }
-
-  /* Allow sidebar to grow with the content */
-  .dashboard-page > .sidebar {
-    position: static !important;
-    top: auto !important;
-
-    height: auto !important;
-    max-height: none !important;
-    min-height: 100vh;
-
-    align-self: stretch !important;
-    flex-shrink: 0;
-
-    display: flex;
-    flex-direction: column;
-
-    overflow: visible !important;
-  }
-
-  /* Keep navigation links at the top */
-  .dashboard-page > .sidebar nav {
-    display: flex;
-    flex-direction: column;
-
-    flex: 0 0 auto !important;
-    overflow: visible !important;
-    padding-right: 0;
-  }
-
-  /* Move logout to the bottom of the page */
-  .dashboard-page > .sidebar .logout-btn {
-    margin-top: auto !important;
-    margin-bottom: 0;
-    flex-shrink: 0;
-  }
-
-  /* Let the main content determine page height */
-  .dashboard-page > .app-main {
-    flex: 1;
-    min-width: 0;
-    height: auto;
   }
 }
