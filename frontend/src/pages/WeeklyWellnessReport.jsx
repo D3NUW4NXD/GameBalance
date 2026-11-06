@@ -14,6 +14,8 @@ import {
 
 import api from "../api/api";
 import { useNotifications } from "../context/NotificationContext";
+import EmailWeeklyReportButton from "../components/EmailWeeklyReportButton";
+
 
 const WeeklyWellnessReport = () => {
   const { notify } = useNotifications();
@@ -102,6 +104,12 @@ const WeeklyWellnessReport = () => {
           Back to Dashboard
         </Link>
       </div>
+
+      
+      <EmailWeeklyReportButton
+        disabled={loading || loadFailed || !report}
+      />
+
 
       {loading ? (
         <div className="loading-screen">
