@@ -16,7 +16,6 @@ import api from "../api/api";
 import { useNotifications } from "../context/NotificationContext";
 import EmailWeeklyReportButton from "../components/EmailWeeklyReportButton";
 
-
 const WeeklyWellnessReport = () => {
   const { notify } = useNotifications();
 
@@ -44,10 +43,7 @@ const WeeklyWellnessReport = () => {
 
       setReport(response.data.report);
     } catch (error) {
-      console.error(
-        "Weekly report load failed:",
-        error
-      );
+      console.error("Weekly report load failed:", error);
 
       setLoadFailed(true);
 
@@ -87,7 +83,8 @@ const WeeklyWellnessReport = () => {
 
   return (
     <div className="module-page">
-      <div className="module-header">
+      {/* HEADER */}
+      <div className="module-header weekly-report-header">
         <div>
           <h1>Weekly Wellness Report</h1>
 
@@ -97,20 +94,21 @@ const WeeklyWellnessReport = () => {
           </p>
         </div>
 
-        <Link
-          to="/dashboard"
-          className="back-link"
-        >
-          Back to Dashboard
-        </Link>
+        {/* EMAIL + DASHBOARD BUTTONS */}
+        <div className="weekly-report-header-actions">
+          <div className="weekly-report-email">
+            <EmailWeeklyReportButton
+              disabled={loading || loadFailed || !report}
+            />
+          </div>
+
+          <Link to="/dashboard" className="back-link">
+            Back to Dashboard
+          </Link>
+        </div>
       </div>
 
-      
-      <EmailWeeklyReportButton
-        disabled={loading || loadFailed || !report}
-      />
-
-
+      {/* REPORT CONTENT */}
       {loading ? (
         <div className="loading-screen">
           Loading weekly report...
@@ -137,8 +135,7 @@ const WeeklyWellnessReport = () => {
         </div>
       ) : report ? (
         <>
-          {/* Main Weekly Statistics */}
-
+          {/* MAIN WEEKLY STATISTICS */}
           <section className="stats-grid module-stats">
             <div className="stat-card">
               <div className="stat-icon gaming">
@@ -169,9 +166,7 @@ const WeeklyWellnessReport = () => {
 
               <div>
                 <p>Average Stress</p>
-                <h2>
-                  {report.average_stress_percentage}%
-                </h2>
+                <h2>{report.average_stress_percentage}%</h2>
               </div>
             </div>
 
@@ -182,15 +177,12 @@ const WeeklyWellnessReport = () => {
 
               <div>
                 <p>Average Sleep</p>
-                <h2>
-                  {report.average_sleep_hours}h
-                </h2>
+                <h2>{report.average_sleep_hours}h</h2>
               </div>
             </div>
           </section>
 
-          {/* Additional Weekly Statistics */}
-
+          {/* ADDITIONAL WEEKLY STATISTICS */}
           <section className="stats-grid module-stats">
             <div className="stat-card">
               <div className="stat-icon gaming">
@@ -221,9 +213,7 @@ const WeeklyWellnessReport = () => {
 
               <div>
                 <p>Risk Trend</p>
-                <h2>
-                  {report.latest_risk_trend}
-                </h2>
+                <h2>{report.latest_risk_trend}</h2>
               </div>
             </div>
 
@@ -234,15 +224,12 @@ const WeeklyWellnessReport = () => {
 
               <div>
                 <p>Weekly Status</p>
-                <h2>
-                  {report.weekly_status}
-                </h2>
+                <h2>{report.weekly_status}</h2>
               </div>
             </div>
           </section>
 
-          {/* Detailed Weekly Summary */}
-
+          {/* DETAILED WEEKLY SUMMARY */}
           <div className="module-grid reports-panel">
             <div className="panel">
               <div className="panel-title">
@@ -252,9 +239,7 @@ const WeeklyWellnessReport = () => {
 
               <div className="record-list">
                 <div className="record-item">
-                  <strong>
-                    Gaming Activity
-                  </strong>
+                  <strong>Gaming Activity</strong>
 
                   <p>
                     Total Sessions:{" "}
@@ -273,9 +258,7 @@ const WeeklyWellnessReport = () => {
                 </div>
 
                 <div className="record-item">
-                  <strong>
-                    Stress Monitoring
-                  </strong>
+                  <strong>Stress Monitoring</strong>
 
                   <p>
                     Average Stress Percentage:{" "}
@@ -294,9 +277,7 @@ const WeeklyWellnessReport = () => {
                 </div>
 
                 <div className="record-item">
-                  <strong>
-                    Sleep Tracking
-                  </strong>
+                  <strong>Sleep Tracking</strong>
 
                   <p>
                     Average Sleep Hours:{" "}
@@ -311,8 +292,7 @@ const WeeklyWellnessReport = () => {
               </div>
             </div>
 
-            {/* Risk and Recommendation */}
-
+            {/* RISK AND RECOMMENDATION */}
             <div className="panel">
               <div className="panel-title">
                 <AlertTriangle />
@@ -345,27 +325,16 @@ const WeeklyWellnessReport = () => {
                 </p>
 
                 <h3>Reason</h3>
-                <p>
-                  {report.recommendation_reason}
-                </p>
+                <p>{report.recommendation_reason}</p>
 
                 <h3>Trend Message</h3>
-                <p>
-                  {report.trend_message}
-                </p>
+                <p>{report.trend_message}</p>
 
                 <h3>Weekly Message</h3>
-                <p>
-                  {report.weekly_message}
-                </p>
+                <p>{report.weekly_message}</p>
 
-                <h3>
-                  Personalized Recommendation
-                </h3>
-
-                <p>
-                  {report.recommendation}
-                </p>
+                <h3>Personalized Recommendation</h3>
+                <p>{report.recommendation}</p>
               </div>
             </div>
           </div>

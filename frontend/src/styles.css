@@ -3694,3 +3694,45 @@ button.login-password-toggle svg {
     min-height: 46px;
   }
 }
+
+
+/* Weekly Wellness Report header buttons */
+
+.weekly-report-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.weekly-report-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.weekly-report-email {
+  display: flex;
+  align-items: center;
+}
+
+.weekly-report-email > * {
+  margin: 0 !important;
+}
+
+.weekly-report-header-actions .back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+}
+
+@media (max-width: 768px) {
+  .weekly-report-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
