@@ -3736,3 +3736,109 @@ button.login-password-toggle svg {
     justify-content: flex-start;
   }
 }
+
+
+/* =========================================
+   GAMEBALANCE - CLEAN WEEKLY REPORT HEADER
+========================================= */
+
+.weekly-report-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.weekly-report-header h1 {
+  margin-bottom: 6px;
+}
+
+.weekly-report-header p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.weekly-report-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.weekly-report-email,
+.weekly-report-email .weekly-email-action {
+  display: flex;
+  align-items: center;
+  margin: 0 !important;
+}
+
+/* Match both button dimensions */
+.weekly-report-header-actions .weekly-email-action button,
+.weekly-report-header-actions > .back-link {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  margin: 0 !important;
+  padding: 0 16px !important;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+/* Primary: Email Report */
+.weekly-report-header-actions .weekly-email-action button {
+  color: #ff8295;
+  background: #250a12;
+  border: 1px solid #79172b;
+}
+
+.weekly-report-header-actions .weekly-email-action button:hover:not(:disabled) {
+  background: #3a0d1a;
+  border-color: #ff1744;
+}
+
+/* Secondary: Dashboard */
+.weekly-report-header-actions > .back-link {
+  color: #bcb4bd;
+  background: #111014;
+  border: 1px solid #33252d;
+}
+
+.weekly-report-header-actions > .back-link:hover {
+  color: #ffffff;
+  border-color: #ff1744;
+  background: #1d1016;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .weekly-report-header {
+    align-items: flex-start;
+  }
+
+  .weekly-report-header-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .weekly-report-header-actions {
+    width: 100%;
+  }
+
+  .weekly-report-header-actions .weekly-email-action button,
+  .weekly-report-header-actions > .back-link {
+    padding: 0 12px !important;
+    font-size: 10px;
+  }
+}

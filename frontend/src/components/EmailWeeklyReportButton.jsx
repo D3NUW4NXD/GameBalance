@@ -55,9 +55,7 @@ const EmailWeeklyReportButton = ({ disabled = false }) => {
         }}
       >
         <Mail size={18} />
-        {sending
-          ? "Sending Report..."
-          : "Email My Weekly Report"}
+        {sending ? "Sending..." : "Email Report"}
       </button>
 
       {message && (
