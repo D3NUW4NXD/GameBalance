@@ -1,40 +1,75 @@
 
 import { useState } from "react";
 import { Mail } from "lucide-react";
+
 import api from "../api/api";
+import { useNotifications } from "../context/NotificationContext";
 
 const EmailWeeklyReportButton = ({ disabled = false }) => {
+  const { notify } = useNotifications();
+
   const [sending, setSending] = useState(false);
-  const [message, setMessage] = useState("");
-  const [success, setSuccess] = useState(false);
+
+  // =====================================
+  // EMAIL WEEKLY WELLNESS REPORT
+  // =====================================
 
   const sendReport = async () => {
     if (sending || disabled) return;
 
     setSending(true);
-    setMessage("");
 
     try {
       const response = await api.post(
         "/analysis/weekly-report/email",
-        {}
+        {},
+        { toast: false }
       );
 
-      setSuccess(true);
-      setMessage(
-        response.data.message ||
-        "Report email request accepted!"
-      );
+      if (response.data?.success === false) {
+        throw new Error(
+          response.data?.message ||
+          "Unable to request weekly report email."
+        );
+      }
+
+      // Show a floating success notification.
+      // The API accepted the request; delivery
+      // may still take a moment.
+      notify({
+        type: "success",
+        title: "Weekly Report Email Requested",
+        duration: 4500,
+      });
+
     } catch (error) {
-      setSuccess(false);
-      setMessage(
-        error.response?.data?.message ||
-        "Failed to send report email."
+      console.error(
+        "Weekly report email error:",
+        error
       );
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Unable to request report email.";
+
+      const isRateLimited =
+        error.response?.status === 429;
+
+      notify({
+        type: isRateLimited ? "warning" : "danger",
+        title: errorMessage,
+        duration: 5500,
+      });
+
     } finally {
       setSending(false);
     }
   };
+
+  // =====================================
+  // EMAIL BUTTON
+  // =====================================
 
   return (
     <div className="weekly-email-action">
@@ -43,31 +78,29 @@ const EmailWeeklyReportButton = ({ disabled = false }) => {
         className="back-link"
         onClick={sendReport}
         disabled={sending || disabled}
+        aria-busy={sending}
         style={{
           display: "inline-flex",
           alignItems: "center",
-          gap: "10px",
-          cursor: sending || disabled
-            ? "not-allowed"
-            : "pointer",
-          opacity: sending || disabled ? 0.6 : 1,
-          marginBottom: "18px",
+          justifyContent: "center",
+          gap: "8px",
+          margin: 0,
+          cursor:
+            sending || disabled
+              ? "not-allowed"
+              : "pointer",
+          opacity:
+            sending || disabled
+              ? 0.6
+              : 1,
         }}
       >
-        <Mail size={18} />
-        {sending ? "Sending..." : "Email Report"}
-      </button>
+        <Mail size={17} />
 
-      {message && (
-        <div
-          className={
-            success ? "success-box" : "error-box"
-          }
-          role={success ? "status" : "alert"}
-        >
-          {message}
-        </div>
-      )}
+        {sending
+          ? "Sending..."
+          : "Email Report"}
+      </button>
     </div>
   );
 };
