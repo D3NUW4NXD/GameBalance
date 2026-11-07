@@ -3842,3 +3842,350 @@ button.login-password-toggle svg {
     font-size: 10px;
   }
 }
+
+
+/* ============================================
+   GAMEBALANCE - RESPONSIVE MOBILE SIDEBAR
+
+   Mobile only: 900px and below
+   Desktop layout remains unchanged
+============================================ */
+
+/* Hidden on desktop */
+.gb-mobile-bar,
+.gb-mobile-overlay,
+.gb-mobile-close {
+  display: none;
+}
+
+/* ============================================
+   MOBILE / TABLET
+============================================ */
+
+@media (max-width: 900px) {
+
+  /* Main application layout */
+  .dashboard-page.gb-app-shell {
+    display: block;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    position: relative;
+  }
+
+  /* ---------------------------------------
+     MOBILE TOP NAVIGATION
+  --------------------------------------- */
+
+  .gb-mobile-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    width: 100%;
+    height: 62px;
+    padding: 0 16px;
+
+    background: rgba(10, 9, 12, 0.97);
+    border-bottom: 1px solid
+      rgba(255, 19, 57, 0.2);
+
+    backdrop-filter: blur(14px);
+  }
+
+  /* Hamburger icon */
+  .gb-mobile-menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+
+    padding: 0;
+    margin: 0;
+
+    color: #ff607e;
+    background: #220c14;
+
+    border: 1px solid
+      rgba(255, 19, 57, 0.4);
+    border-radius: 7px;
+
+    cursor: pointer;
+  }
+
+  .gb-mobile-menu-button:hover {
+    background: #35101d;
+    border-color: #ff3355;
+  }
+
+  /* Mobile brand */
+  .gb-mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    color: #f4f1f2;
+
+    font-family: "Orbitron", sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .gb-mobile-brand svg {
+    flex-shrink: 0;
+    color: #ff3355;
+  }
+
+  /* ---------------------------------------
+     DARK BACKDROP
+  --------------------------------------- */
+
+  .gb-mobile-overlay {
+    display: block;
+
+    position: fixed;
+    inset: 0;
+
+    z-index: 3000;
+
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+
+    background: rgba(0, 0, 0, 0.78);
+    border: none;
+
+    backdrop-filter: blur(4px);
+    cursor: pointer;
+  }
+
+  /* ---------------------------------------
+     SLIDE-OUT SIDEBAR
+  --------------------------------------- */
+
+  .gb-app-shell > .sidebar {
+    position: fixed !important;
+
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+
+    z-index: 3001;
+
+    display: flex !important;
+    flex-direction: column !important;
+
+    width: min(300px, 86vw) !important;
+
+    height: 100vh !important;
+    height: 100dvh !important;
+
+    min-height: 0 !important;
+    max-height: 100dvh !important;
+
+    padding: 22px 16px !important;
+
+    background: #0d0b0f;
+
+    border-right: 1px solid
+      rgba(255, 19, 57, 0.35);
+
+    box-shadow:
+      15px 0 50px rgba(0, 0, 0, 0.6);
+
+    overflow: hidden !important;
+
+    transform: translateX(-105%);
+    visibility: hidden;
+    pointer-events: none;
+
+    transition:
+      transform 0.25s ease,
+      visibility 0.25s ease;
+  }
+
+  /* Sidebar open */
+  .gb-app-shell.gb-menu-open > .sidebar {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  /* Keep original sidebar brand */
+  .gb-app-shell > .sidebar .sidebar-brand {
+    flex-shrink: 0;
+    padding-right: 36px;
+    margin-bottom: 28px;
+  }
+
+  /* ---------------------------------------
+     SIDEBAR LINKS
+  --------------------------------------- */
+
+  .gb-app-shell > .sidebar nav {
+    display: flex !important;
+    flex-direction: column !important;
+
+    grid-template-columns: none !important;
+
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+
+    gap: 7px;
+    padding-right: 4px;
+
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  .gb-app-shell > .sidebar nav a {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+
+    width: 100%;
+    min-height: 44px;
+
+    flex-shrink: 0;
+
+    font-size: 14px;
+  }
+
+  /* Keep logout visible at bottom */
+  .gb-app-shell > .sidebar .logout-btn {
+    display: flex !important;
+
+    position: relative !important;
+
+    width: 100%;
+    min-height: 46px;
+
+    margin-top: auto !important;
+    margin-bottom: 0 !important;
+
+    flex-shrink: 0;
+  }
+
+  /* ---------------------------------------
+     SIDEBAR CLOSE BUTTON
+  --------------------------------------- */
+
+  .gb-mobile-close {
+    position: fixed;
+
+    top: 18px;
+    left: calc(min(300px, 86vw) - 49px);
+
+    z-index: 3002;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 34px;
+    height: 34px;
+
+    margin: 0;
+    padding: 0;
+
+    color: #ff718a;
+    background: #250b14;
+
+    border: 1px solid
+      rgba(255, 19, 57, 0.3);
+    border-radius: 6px;
+
+    cursor: pointer;
+  }
+
+  .gb-mobile-close:hover {
+    color: white;
+    background: #ff1339;
+  }
+
+  /* ---------------------------------------
+     RESPONSIVE PAGE CONTENT
+  --------------------------------------- */
+
+  .gb-app-shell > .app-main {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .gb-app-shell .dashboard-content,
+  .gb-app-shell .app-main .module-page {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+
+    padding: 22px 18px;
+  }
+
+  /* Prevent cards from forcing page overflow */
+  .gb-app-shell .stat-card,
+  .gb-app-shell .panel,
+  .gb-app-shell .chart-panel {
+    min-width: 0;
+  }
+
+}
+
+/* ============================================
+   SMALL PHONES
+============================================ */
+
+@media (max-width: 540px) {
+
+  .gb-mobile-bar {
+    height: 58px;
+    padding: 0 12px;
+  }
+
+  .gb-mobile-brand {
+    font-size: 13px;
+  }
+
+  .gb-app-shell .dashboard-content,
+  .gb-app-shell .app-main .module-page {
+    padding: 18px 14px;
+  }
+
+  .gb-app-shell .dashboard-header h1,
+  .gb-app-shell .module-header h1 {
+    font-size: clamp(20px, 6vw, 25px);
+    overflow-wrap: anywhere;
+  }
+
+  /* One column for dashboard cards */
+  .gb-app-shell .stats-grid,
+  .gb-app-shell .quick-actions,
+  .gb-app-shell .charts-grid,
+  .gb-app-shell .content-grid,
+  .gb-app-shell .module-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Prevent long text from overflowing */
+  .gb-app-shell .profile-identity-card h3 {
+    overflow-wrap: anywhere;
+  }
+
+}
+
+/* Respect reduced motion settings */
+@media (prefers-reduced-motion: reduce) {
+  .gb-app-shell > .sidebar {
+    transition: none;
+  }
+}
