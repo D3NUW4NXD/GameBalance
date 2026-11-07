@@ -384,3 +384,271 @@
     transition: none !important;
   }
 }
+
+
+/* ============================================
+   GAMEBALANCE - MOBILE DASHBOARD FIX
+   Header, username, bell, cards and charts
+   Desktop remains unchanged
+============================================ */
+
+@media (max-width: 900px) {
+
+  /* Dashboard title + notification + username */
+
+  .gb-mobile-shell .dashboard-content > .dashboard-header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    width: 100%;
+    margin-bottom: 22px;
+  }
+
+  .gb-mobile-shell .dashboard-header > div:first-child {
+    min-width: 0;
+  }
+
+  .gb-mobile-shell .dashboard-header h1 {
+    font-size: clamp(17px, 4.7vw, 24px) !important;
+    line-height: 1.2;
+    margin: 0 0 5px;
+  }
+
+  .gb-mobile-shell .dashboard-header p {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  /* Keep notification and username beside title */
+
+  .gb-mobile-shell .dashboard-header .gb-header-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+
+    width: auto !important;
+    min-width: 0;
+    gap: 8px !important;
+  }
+
+  .gb-mobile-shell .gb-bell-container {
+    flex: 0 0 auto;
+  }
+
+  .gb-mobile-shell .gb-bell-trigger {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    padding: 0;
+  }
+
+  .gb-mobile-shell .gb-header-actions .user-pill {
+    display: block !important;
+    flex: 0 1 auto;
+
+    max-width: 105px;
+    min-width: 0;
+    min-height: 40px;
+
+    padding: 10px 12px;
+    box-sizing: border-box;
+
+    font-size: 11px;
+    line-height: 20px;
+    text-align: center;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* Floating mobile notification panel */
+
+  .gb-mobile-shell .gb-bell-dropdown {
+    position: fixed !important;
+    top: 145px !important;
+    left: 12px !important;
+    right: 12px !important;
+
+    width: auto !important;
+    max-width: none !important;
+    max-height: min(65dvh, 500px) !important;
+
+    z-index: 4000;
+    border-radius: 12px;
+  }
+
+  .gb-mobile-shell .gb-bell-list {
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  /* Prevent content overflow */
+
+  .gb-mobile-shell .dashboard-content,
+  .gb-mobile-shell .stat-card,
+  .gb-mobile-shell .chart-panel,
+  .gb-mobile-shell .panel {
+    min-width: 0 !important;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Make chart areas fit the screen */
+
+  .gb-mobile-shell .dashboard-content > .charts-grid,
+  .gb-mobile-shell .dashboard-content > .content-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 14px;
+  }
+
+  .gb-mobile-shell .recharts-responsive-container {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+/* ============================================
+   PHONE LAYOUT
+============================================ */
+
+@media (max-width: 600px) {
+
+  .gb-mobile-shell .dashboard-content > .stats-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 11px;
+  }
+
+  .gb-mobile-shell .dashboard-content > .quick-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px;
+  }
+
+  .gb-mobile-shell .dashboard-content .stat-card {
+    padding: 14px !important;
+  }
+
+  .gb-mobile-shell .dashboard-content .stat-card h2 {
+    font-size: 21px;
+    overflow-wrap: anywhere;
+  }
+
+  .gb-mobile-shell .dashboard-content .chart-panel {
+    padding: 15px;
+  }
+
+  /* Responsive page forms */
+
+  .gb-mobile-shell .module-form input,
+  .gb-mobile-shell .module-form select,
+  .gb-mobile-shell .module-form textarea {
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  /* Allow wide tables to scroll */
+
+  .gb-mobile-shell .reports-table-wrap,
+  .gb-mobile-shell .staff-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  /* Mobile toast notifications */
+
+  .gb-toast-stack {
+    top: 70px !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  .gb-toast {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+/* ============================================
+   MODERN PHONES - 375px to 600px
+   Two-column dashboard cards
+============================================ */
+
+@media (min-width: 375px) and (max-width: 600px) {
+
+  .gb-mobile-shell .dashboard-content > .stats-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .gb-mobile-shell .dashboard-content .stat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+
+    min-height: 130px;
+    gap: 10px;
+    padding: 14px 12px !important;
+  }
+
+  .gb-mobile-shell .dashboard-content .stat-icon {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+  }
+
+  .gb-mobile-shell .dashboard-content .stat-icon svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .gb-mobile-shell .dashboard-content .stat-card p {
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  .gb-mobile-shell .dashboard-content > .quick-actions {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .gb-mobile-shell .dashboard-content .quick-actions a {
+    min-width: 0;
+    min-height: 48px;
+    padding: 10px 8px;
+    font-size: 10px;
+    text-align: center;
+  }
+}
+
+/* ============================================
+   EXTRA SMALL PHONES
+============================================ */
+
+@media (max-width: 374px) {
+
+  .gb-mobile-shell .dashboard-header h1 {
+    font-size: 17px !important;
+  }
+
+  .gb-mobile-shell .gb-header-actions .user-pill {
+    max-width: 78px;
+    padding: 10px 8px;
+  }
+
+  .gb-mobile-shell .dashboard-header .gb-header-actions {
+    gap: 6px !important;
+  }
+}
