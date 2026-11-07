@@ -4,127 +4,113 @@ import { useLocation } from "react-router-dom";
 import { Gamepad2, Menu, X } from "lucide-react";
 
 import Sidebar from "./Sidebar";
+import "../mobile-sidebar.css";
 
 const AppLayout = ({ children }) => {
-  const [mobileMenuOpen, setMobileMenuOpen] =
-    useState(false);
-
+  const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 
-  // Close the sidebar when the page changes.
+  // Close drawer whenever navigation changes
   useEffect(() => {
-    setMobileMenuOpen(false);
+    setMenuOpen(false);
   }, [location.pathname]);
 
-  // Lock background scrolling while the
-  // mobile sidebar is open.
+  // Mobile drawer keyboard and scroll behavior
   useEffect(() => {
-    if (!mobileMenuOpen) return;
+    if (!menuOpen) return;
 
-    const previousOverflow =
-      document.body.style.overflow;
-
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
-        setMobileMenuOpen(false);
+        setMenuOpen(false);
       }
     };
 
     const handleResize = () => {
       if (window.innerWidth > 900) {
-        setMobileMenuOpen(false);
+        setMenuOpen(false);
       }
     };
 
-    window.addEventListener(
-      "keydown",
-      handleKeyDown
-    );
+    document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("resize", handleResize);
 
-    window.addEventListener(
-      "resize",
-      handleResize
-    );
+    document.querySelector(".gb-drawer-close")?.focus();
 
     return () => {
-      document.body.style.overflow =
-        previousOverflow;
-
-      window.removeEventListener(
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener(
         "keydown",
         handleKeyDown
       );
-
       window.removeEventListener(
         "resize",
         handleResize
       );
     };
-  }, [mobileMenuOpen]);
+  }, [menuOpen]);
 
-  // Close the menu when clicking an existing
-  // sidebar link or the Logout button.
-  // No modifications to Sidebar.jsx required.
-  const handleNavigationClick = (event) => {
-    if (!mobileMenuOpen) return;
+  // Close when a sidebar navigation link or Logout is clicked
+  const handleSidebarClick = (event) => {
+    if (!menuOpen) return;
 
-    const clickedNavigation =
-      event.target.closest?.(
+    if (
+      event.target instanceof Element &&
+      event.target.closest(
         ".sidebar nav a, .sidebar .logout-btn"
-      );
-
-    if (clickedNavigation) {
-      setMobileMenuOpen(false);
+      )
+    ) {
+      setMenuOpen(false);
     }
   };
 
   return (
     <div
-      className={`dashboard-page gb-app-shell ${
-        mobileMenuOpen ? "gb-menu-open" : ""
+      className={`dashboard-page gb-mobile-shell ${
+        menuOpen ? "gb-drawer-open" : ""
       }`}
-      onClickCapture={handleNavigationClick}
+      onClickCapture={handleSidebarClick}
     >
       {/* MOBILE HEADER */}
-      <header className="gb-mobile-bar">
+      <header className="gb-mobile-header">
         <button
           type="button"
-          className="gb-mobile-menu-button"
+          className="gb-menu-toggle"
+          onClick={() => setMenuOpen(true)}
           aria-label="Open navigation menu"
-          aria-expanded={mobileMenuOpen}
-          onClick={() => setMobileMenuOpen(true)}
+          aria-expanded={menuOpen}
         >
           <Menu size={22} />
         </button>
 
-        <div className="gb-mobile-brand">
+        <div className="gb-header-brand">
           <Gamepad2 size={20} />
-          <span>GameBalance</span>
+          <span>GAMEBALANCE</span>
         </div>
       </header>
 
-      {/* DARK MOBILE BACKDROP */}
-      {mobileMenuOpen && (
+      {/* DARK OVERLAY */}
+      {menuOpen && (
         <button
           type="button"
-          className="gb-mobile-overlay"
+          className="gb-drawer-backdrop"
           aria-label="Close navigation menu"
-          onClick={() => setMobileMenuOpen(false)}
+          onClick={() => setMenuOpen(false)}
         />
       )}
 
-      {/* ORIGINAL SIDEBAR - UNCHANGED */}
+      {/* YOUR ORIGINAL SIDEBAR */}
       <Sidebar />
 
       {/* MOBILE CLOSE BUTTON */}
-      {mobileMenuOpen && (
+      {menuOpen && (
         <button
           type="button"
-          className="gb-mobile-close"
+          className="gb-drawer-close"
           aria-label="Close sidebar"
-          onClick={() => setMobileMenuOpen(false)}
+          onClick={() => setMenuOpen(false)}
         >
           <X size={20} />
         </button>
