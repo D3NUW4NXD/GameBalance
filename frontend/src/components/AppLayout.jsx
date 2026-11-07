@@ -5,6 +5,7 @@ import { Gamepad2, Menu, X } from "lucide-react";
 
 import Sidebar from "./Sidebar";
 import "../mobile-sidebar.css";
+import "../mobile-polish.css";
 
 const AppLayout = ({ children }) => {
   const [menuOpen, setMenuOpen] = useState(false);
