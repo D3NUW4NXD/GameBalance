@@ -14,13 +14,21 @@ const {
   updateProfile,
   uploadProfileImage,
   deleteProfileImage,
-  changePassword,
 } = require("../controllers/authController");
 
 const { protect } = require("../middleware/authMiddleware");
 
-// Use a writable temporary folder for Netlify Functions.
-// On a local computer, this uses the system's temp directory.
+const {
+  requestReset,
+  confirmReset,
+  requestChange,
+  confirmChange,
+} = require("../controllers/passwordCodeController");
+
+// =====================================
+// PROFILE IMAGE UPLOAD CONFIGURATION
+// =====================================
+
 const uploadPath = path.join(
   os.tmpdir(),
   "gamebalance",
@@ -28,23 +36,25 @@ const uploadPath = path.join(
   "profile"
 );
 
-// Create the directory if it does not exist.
 fs.mkdirSync(uploadPath, { recursive: true });
 
-// Configure profile image storage.
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadPath);
   },
 
   filename: (req, file, cb) => {
-    const extension = path.extname(file.originalname).toLowerCase();
-    const fileName = `user_${req.user.user_id}_${Date.now()}${extension}`;
+    const extension = path.extname(
+      file.originalname
+    ).toLowerCase();
+
+    const fileName =
+      `user_${req.user.user_id}_${Date.now()}${extension}`;
+
     cb(null, fileName);
   },
 });
 
-// Allow only supported profile image types.
 const fileFilter = (req, file, cb) => {
   const allowedTypes = [
     "image/jpeg",
@@ -55,14 +65,15 @@ const fileFilter = (req, file, cb) => {
 
   if (!allowedTypes.includes(file.mimetype)) {
     return cb(
-      new Error("Only JPG, PNG, and WEBP image files are allowed")
+      new Error(
+        "Only JPG, PNG, and WEBP image files are allowed"
+      )
     );
   }
 
   cb(null, true);
 };
 
-// Set upload limits.
 const upload = multer({
   storage,
   fileFilter,
@@ -71,7 +82,6 @@ const upload = multer({
   },
 });
 
-// Handle Multer upload errors.
 const uploadProfileMiddleware = (req, res, next) => {
   upload.single("profile_image")(req, res, (error) => {
     if (error instanceof multer.MulterError) {
@@ -95,12 +105,33 @@ const uploadProfileMiddleware = (req, res, next) => {
   });
 };
 
-// Public authentication routes.
+// =====================================
+// PUBLIC AUTHENTICATION
+// =====================================
+
 router.post("/register", register);
 router.post("/login", login);
 
-// Protected profile routes.
+// =====================================
+// FORGOT PASSWORD - EMAIL CODE
+// =====================================
+
+router.post(
+  "/password/request-reset",
+  requestReset
+);
+
+router.post(
+  "/password/confirm-reset",
+  confirmReset
+);
+
+// =====================================
+// PROTECTED PROFILE
+// =====================================
+
 router.get("/profile", protect, getProfile);
+
 router.put("/profile", protect, updateProfile);
 
 router.put(
@@ -116,6 +147,20 @@ router.delete(
   deleteProfileImage
 );
 
-router.put("/change-password", protect, changePassword);
+// =====================================
+// CHANGE PASSWORD - EMAIL CODE
+// =====================================
+
+router.post(
+  "/password/request-change",
+  protect,
+  requestChange
+);
+
+router.post(
+  "/password/confirm-change",
+  protect,
+  confirmChange
+);
 
 module.exports = router;

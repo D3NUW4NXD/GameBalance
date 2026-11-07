@@ -1,3 +1,4 @@
+
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
@@ -7,21 +8,37 @@ const db = require("../config/db");
 const deleteOldProfileImage = (profileImagePath) => {
   if (!profileImagePath) return;
 
-  const filePath = path.join(__dirname, "..", profileImagePath);
+  const filePath = path.join(
+    __dirname,
+    "..",
+    profileImagePath
+  );
 
   if (fs.existsSync(filePath)) {
     fs.unlinkSync(filePath);
   }
 };
 
+// =====================================
+// REGISTER
+// =====================================
+
 exports.register = async (req, res) => {
   try {
-    const { full_name, email, password, age, gender, city } = req.body;
+    const {
+      full_name,
+      email,
+      password,
+      age,
+      gender,
+      city,
+    } = req.body;
 
     if (!full_name || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: "Full name, email and password are required",
+        message:
+          "Full name, email and password are required",
       });
     }
 
@@ -35,7 +52,8 @@ exports.register = async (req, res) => {
     if (age && (age < 18 || age > 20)) {
       return res.status(400).json({
         success: false,
-        message: "This system is designed for users aged 18 to 20",
+        message:
+          "This system is designed for users aged 18 to 20",
       });
     }
 
@@ -51,11 +69,14 @@ exports.register = async (req, res) => {
       });
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(
+      password,
+      10
+    );
 
     await db.query(
-      `INSERT INTO users 
-       (full_name, email, password_hash, age, gender, city) 
+      `INSERT INTO users
+       (full_name, email, password_hash, age, gender, city)
        VALUES (?, ?, ?, ?, ?, ?)`,
       [
         full_name,
@@ -67,19 +88,23 @@ exports.register = async (req, res) => {
       ]
     );
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "User registered successfully",
     });
   } catch (error) {
     console.error("Register error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Server error during registration",
     });
   }
 };
+
+// =====================================
+// LOGIN
+// =====================================
 
 exports.login = async (req, res) => {
   try {
@@ -92,9 +117,10 @@ exports.login = async (req, res) => {
       });
     }
 
-    const [users] = await db.query("SELECT * FROM users WHERE email = ?", [
-      email,
-    ]);
+    const [users] = await db.query(
+      "SELECT * FROM users WHERE email = ?",
+      [email]
+    );
 
     if (users.length === 0) {
       return res.status(401).json({
@@ -105,7 +131,10 @@ exports.login = async (req, res) => {
 
     const user = users[0];
 
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      user.password_hash
+    );
 
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -114,16 +143,19 @@ exports.login = async (req, res) => {
       });
     }
 
+    // New sessions include a version so
+    // password resets can invalidate old sessions.
     const token = jwt.sign(
       {
         user_id: user.user_id,
         role: user.role,
+        token_version: Number(user.token_version || 0),
       },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Login successful",
       token,
@@ -141,27 +173,31 @@ exports.login = async (req, res) => {
   } catch (error) {
     console.error("Login error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Server error during login",
     });
   }
 };
 
+// =====================================
+// GET PROFILE
+// =====================================
+
 exports.getProfile = async (req, res) => {
   try {
     const [users] = await db.query(
-      `SELECT 
-          user_id, 
-          full_name, 
-          email, 
-          role, 
-          age, 
-          gender, 
-          city,
-          profile_image,
-          created_at 
-       FROM users 
+      `SELECT
+         user_id,
+         full_name,
+         email,
+         role,
+         age,
+         gender,
+         city,
+         profile_image,
+         created_at
+       FROM users
        WHERE user_id = ?`,
       [req.user.user_id]
     );
@@ -173,23 +209,32 @@ exports.getProfile = async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       user: users[0],
     });
   } catch (error) {
     console.error("Profile error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Server error while loading profile",
     });
   }
 };
 
+// =====================================
+// UPDATE PROFILE
+// =====================================
+
 exports.updateProfile = async (req, res) => {
   try {
-    const { full_name, age, gender, city } = req.body;
+    const {
+      full_name,
+      age,
+      gender,
+      city,
+    } = req.body;
 
     if (!full_name) {
       return res.status(400).json({
@@ -201,7 +246,8 @@ exports.updateProfile = async (req, res) => {
     if (age && (age < 18 || age > 20)) {
       return res.status(400).json({
         success: false,
-        message: "This system is designed for users aged 18 to 20",
+        message:
+          "This system is designed for users aged 18 to 20",
       });
     }
 
@@ -226,22 +272,22 @@ exports.updateProfile = async (req, res) => {
     }
 
     const [updatedUsers] = await db.query(
-      `SELECT 
-          user_id,
-          full_name,
-          email,
-          role,
-          age,
-          gender,
-          city,
-          profile_image,
-          created_at
+      `SELECT
+         user_id,
+         full_name,
+         email,
+         role,
+         age,
+         gender,
+         city,
+         profile_image,
+         created_at
        FROM users
        WHERE user_id = ?`,
       [req.user.user_id]
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Profile updated successfully",
       user: updatedUsers[0],
@@ -249,12 +295,16 @@ exports.updateProfile = async (req, res) => {
   } catch (error) {
     console.error("Update profile error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Server error while updating profile",
     });
   }
 };
+
+// =====================================
+// UPLOAD PROFILE IMAGE
+// =====================================
 
 exports.uploadProfileImage = async (req, res) => {
   try {
@@ -279,14 +329,17 @@ exports.uploadProfileImage = async (req, res) => {
 
     deleteOldProfileImage(users[0].profile_image);
 
-    const profileImagePath = `/uploads/profile/${req.file.filename}`;
+    const profileImagePath =
+      `/uploads/profile/${req.file.filename}`;
 
-    await db.query("UPDATE users SET profile_image = ? WHERE user_id = ?", [
-      profileImagePath,
-      req.user.user_id,
-    ]);
+    await db.query(
+      `UPDATE users
+       SET profile_image = ?
+       WHERE user_id = ?`,
+      [profileImagePath, req.user.user_id]
+    );
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Profile image uploaded successfully",
       profile_image: profileImagePath,
@@ -294,12 +347,16 @@ exports.uploadProfileImage = async (req, res) => {
   } catch (error) {
     console.error("Upload profile image error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Server error while uploading profile image",
     });
   }
 };
+
+// =====================================
+// DELETE PROFILE IMAGE
+// =====================================
 
 exports.deleteProfileImage = async (req, res) => {
   try {
@@ -317,85 +374,23 @@ exports.deleteProfileImage = async (req, res) => {
 
     deleteOldProfileImage(users[0].profile_image);
 
-    await db.query("UPDATE users SET profile_image = NULL WHERE user_id = ?", [
-      req.user.user_id,
-    ]);
+    await db.query(
+      `UPDATE users
+       SET profile_image = NULL
+       WHERE user_id = ?`,
+      [req.user.user_id]
+    );
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Profile image removed successfully",
     });
   } catch (error) {
     console.error("Delete profile image error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Server error while removing profile image",
-    });
-  }
-};
-
-exports.changePassword = async (req, res) => {
-  try {
-    const { current_password, new_password } = req.body;
-
-    if (!current_password || !new_password) {
-      return res.status(400).json({
-        success: false,
-        message: "Current password and new password are required",
-      });
-    }
-
-    if (new_password.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: "New password must be at least 6 characters",
-      });
-    }
-
-    const [users] = await db.query(
-      "SELECT user_id, password_hash FROM users WHERE user_id = ?",
-      [req.user.user_id]
-    );
-
-    if (users.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    const user = users[0];
-
-    const isCurrentPasswordValid = await bcrypt.compare(
-      current_password,
-      user.password_hash
-    );
-
-    if (!isCurrentPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        message: "Current password is incorrect",
-      });
-    }
-
-    const newPasswordHash = await bcrypt.hash(new_password, 10);
-
-    await db.query("UPDATE users SET password_hash = ? WHERE user_id = ?", [
-      newPasswordHash,
-      req.user.user_id,
-    ]);
-
-    res.status(200).json({
-      success: true,
-      message: "Password changed successfully",
-    });
-  } catch (error) {
-    console.error("Change password error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error while changing password",
     });
   }
 };

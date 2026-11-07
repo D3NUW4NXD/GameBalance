@@ -2,8 +2,10 @@
 const jwt = require("jsonwebtoken");
 const db = require("../config/db");
 
-// Verify the JWT and read current permissions
-// directly from MySQL on each request.
+// =====================================
+// VERIFY LOGIN TOKEN
+// =====================================
+
 exports.protect = async (req, res, next) => {
   const authHeader = req.headers.authorization || "";
 
@@ -25,15 +27,19 @@ exports.protect = async (req, res, next) => {
 
     const userId = Number(decoded.user_id);
 
-    if (!Number.isSafeInteger(userId) || userId < 1) {
+    if (
+      !Number.isSafeInteger(userId) ||
+      userId < 1
+    ) {
       return res.status(401).json({
         success: false,
         message: "Invalid token",
       });
     }
 
+    // Read current permissions and session version.
     const [users] = await db.query(
-      `SELECT user_id, role
+      `SELECT user_id, role, token_version
        FROM users
        WHERE user_id = ?
        LIMIT 1`,
@@ -47,6 +53,18 @@ exports.protect = async (req, res, next) => {
       });
     }
 
+    // A password change increments token_version.
+    // This rejects all previously issued tokens.
+    if (
+      Number(decoded.token_version ?? 0) !==
+      Number(users[0].token_version)
+    ) {
+      return res.status(401).json({
+        success: false,
+        message: "Session expired. Please log in again",
+      });
+    }
+
     req.user = {
       user_id: users[0].user_id,
       role: users[0].role,
@@ -56,7 +74,8 @@ exports.protect = async (req, res, next) => {
   } catch (error) {
     if (
       error.name === "JsonWebTokenError" ||
-      error.name === "TokenExpiredError"
+      error.name === "TokenExpiredError" ||
+      error.name === "NotBeforeError"
     ) {
       return res.status(401).json({
         success: false,
@@ -73,8 +92,10 @@ exports.protect = async (req, res, next) => {
   }
 };
 
-// ADMIN and SUPER_ADMIN can access
-// all existing admin functions.
+// =====================================
+// ADMIN AND SUPER ADMIN
+// =====================================
+
 exports.adminOnly = (req, res, next) => {
   if (
     !["ADMIN", "SUPER_ADMIN"].includes(req.user?.role)
@@ -88,7 +109,10 @@ exports.adminOnly = (req, res, next) => {
   next();
 };
 
-// Only SUPER_ADMIN can manage admin roles.
+// =====================================
+// SUPER ADMIN ONLY
+// =====================================
+
 exports.superAdminOnly = (req, res, next) => {
   if (req.user?.role !== "SUPER_ADMIN") {
     return res.status(403).json({

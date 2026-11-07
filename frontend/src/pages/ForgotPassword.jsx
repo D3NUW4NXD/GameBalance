@@ -1,58 +1,112 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
+
 import {
   Gamepad2,
   Mail,
-  ArrowLeft,
+  Lock,
   ShieldCheck,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 import api from "../api/api";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [stage, setStage] = useState("request");
+
+  const [code, setCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = async (event) => {
+  // =====================================
+  // REQUEST EMAIL CODE
+  // =====================================
+
+  const requestCode = async (event) => {
     event.preventDefault();
+    if (busy) return;
 
-    if (loading) return;
+    setBusy(true);
+    setError("");
+    setMessage("");
 
-    const cleanEmail = email.trim().toLowerCase();
+    try {
+      const cleanEmail = email.trim().toLowerCase();
 
-    if (
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)
-    ) {
-      setError("Please enter a valid email address.");
+      const response = await api.post(
+        "/auth/password/request-reset",
+        { email: cleanEmail }
+      );
+
+      setEmail(cleanEmail);
+
+      setMessage(
+        response.data.message ||
+        "If this account exists, check your email for a code."
+      );
+
+      setStage("verify");
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+        "Could not request a code. Please try again."
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // =====================================
+  // VERIFY CODE AND RESET PASSWORD
+  // =====================================
+
+  const confirmReset = async (event) => {
+    event.preventDefault();
+    if (busy) return;
+
+    if (newPassword !== confirmPassword) {
+      setError("New passwords do not match.");
       return;
     }
 
+    setBusy(true);
     setError("");
 
     try {
-      setLoading(true);
-
-      await api.post("/auth/forgot-password", {
-        email: cleanEmail,
-      });
-
-      // Success is shown only when the API responds.
-      setSent(true);
-    } catch (err) {
-      console.error(
-        "Password recovery request failed:",
-        err
+      await api.post(
+        "/auth/password/confirm-reset",
+        {
+          email,
+          code,
+          new_password: newPassword,
+        }
       );
 
+      setCode("");
+      setNewPassword("");
+      setConfirmPassword("");
+
+      setMessage(
+        "Password reset successfully. Log in with your new password."
+      );
+
+      setStage("complete");
+    } catch (err) {
       setError(
         err.response?.data?.message ||
-          "Unable to request a password reset. Please try again."
+        "Code invalid or expired. Request another code."
       );
     } finally {
-      setLoading(false);
+      setBusy(false);
     }
   };
 
@@ -60,7 +114,7 @@ const ForgotPassword = () => {
     <div className="auth-page">
       <div className="auth-card">
 
-        {/* GameBalance Branding */}
+        {/* GAMEBALANCE BRANDING */}
         <div className="brand">
           <div className="brand-icon">
             <Gamepad2 size={34} />
@@ -74,54 +128,46 @@ const ForgotPassword = () => {
           </p>
         </div>
 
-        {sent ? (
+        {/* =====================================
+            PASSWORD RESET COMPLETE
+        ===================================== */}
 
-          /* Request submitted */
+        {stage === "complete" ? (
           <div className="auth-form">
-            <div className="forgot-success-icon">
-              <ShieldCheck size={40} />
-            </div>
 
-            <h2>Check Your Email</h2>
+            <ShieldCheck
+              size={40}
+              color="#22c55e"
+            />
 
-            <p className="forgot-description">
-              If a GameBalance account exists for
-              this email address, you will receive
-              a password reset link shortly.
-            </p>
+            <h2>Password Reset</h2>
 
-            <p className="forgot-email-display">
-              {email.trim().toLowerCase()}
-            </p>
-
-            <p className="forgot-description">
-              Please check your inbox and spam folder.
+            <p className="success-box" role="status">
+              {message}
             </p>
 
             <p className="auth-link">
               <Link to="/login">
-                <ArrowLeft
-                  size={16}
-                  className="forgot-inline-icon"
-                />
                 Back to Login
               </Link>
             </p>
           </div>
 
-        ) : (
+        ) : stage === "request" ? (
 
-          /* Forgot Password Form */
+          /* =====================================
+             ENTER EMAIL
+          ===================================== */
+
           <form
             className="auth-form"
-            onSubmit={handleSubmit}
+            onSubmit={requestCode}
           >
             <h2>Forgot Password?</h2>
 
             <p className="forgot-description">
-              No worries! Enter your registered
-              email address and we'll send you
-              instructions to reset your password.
+              Enter your registered email address
+              to request a six-digit code.
             </p>
 
             <label htmlFor="forgot-email">
@@ -134,13 +180,11 @@ const ForgotPassword = () => {
               <input
                 id="forgot-email"
                 type="email"
-                name="email"
                 value={email}
-                onChange={(event) => {
-                  setEmail(event.target.value);
-                  setError("");
-                }}
-                placeholder="Enter your email"
+                onChange={(event) =>
+                  setEmail(event.target.value)
+                }
+                placeholder="Your email address"
                 autoComplete="email"
                 maxLength={254}
                 required
@@ -155,25 +199,169 @@ const ForgotPassword = () => {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={busy}
             >
-              {loading
+              {busy
                 ? "Sending..."
-                : "Send Reset Link"}
+                : "Send Verification Code"}
             </button>
 
             <p className="auth-link">
               <Link to="/login">
-                <ArrowLeft
-                  size={16}
-                  className="forgot-inline-icon"
-                />
                 Back to Login
               </Link>
             </p>
           </form>
-        )}
 
+        ) : (
+
+          /* =====================================
+             ENTER CODE AND NEW PASSWORD
+          ===================================== */
+
+          <form
+            className="auth-form"
+            onSubmit={confirmReset}
+          >
+            <h2>Verify Email Code</h2>
+
+            <p className="forgot-description">
+              {message}
+            </p>
+
+            <p className="forgot-email-display">
+              {email}
+            </p>
+
+            {/* SIX-DIGIT CODE */}
+            <label htmlFor="reset-code">
+              Six-Digit Code
+            </label>
+
+            <div className="input-group">
+              <ShieldCheck size={18} />
+
+              <input
+                id="reset-code"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                value={code}
+                onChange={(event) =>
+                  setCode(
+                    event.target.value
+                      .replace(/\D/g, "")
+                      .slice(0, 6)
+                  )
+                }
+                placeholder="123456"
+                required
+              />
+            </div>
+
+            {/* NEW PASSWORD */}
+            <label htmlFor="reset-password">
+              New Password (10+ characters)
+            </label>
+
+            <div className="input-group login-password-group">
+              <Lock size={18} />
+
+              <input
+                id="reset-password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={(event) =>
+                  setNewPassword(event.target.value)
+                }
+                minLength={10}
+                required
+              />
+
+              <button
+                type="button"
+                className="login-password-toggle"
+                onClick={() =>
+                  setShowPassword((value) => !value)
+                }
+                aria-label={
+                  showPassword
+                    ? "Hide password"
+                    : "Show password"
+                }
+              >
+                {showPassword ? (
+                  <EyeOff size={18} />
+                ) : (
+                  <Eye size={18} />
+                )}
+              </button>
+            </div>
+
+            {/* CONFIRM NEW PASSWORD */}
+            <label htmlFor="reset-confirm">
+              Confirm New Password
+            </label>
+
+            <div className="input-group">
+              <Lock size={18} />
+
+              <input
+                id="reset-confirm"
+                type="password"
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(event) =>
+                  setConfirmPassword(event.target.value)
+                }
+                required
+              />
+            </div>
+
+            {error && (
+              <p className="error-box" role="alert">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={busy}
+            >
+              {busy
+                ? "Verifying..."
+                : "Reset Password"}
+            </button>
+
+            <p className="auth-link">
+              <button
+                type="button"
+                onClick={() => {
+                  setStage("request");
+                  setError("");
+                }}
+                style={{
+                  width: "auto",
+                  height: "auto",
+                  margin: 0,
+                  padding: 0,
+                  background: "none",
+                  border: 0,
+                  boxShadow: "none",
+                  color: "#ff8295",
+                  cursor: "pointer",
+                  fontSize: 14,
+                  textTransform: "none",
+                }}
+              >
+                Request another code
+              </button>
+            </p>
+          </form>
+        )}
       </div>
     </div>
   );

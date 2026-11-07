@@ -8,7 +8,6 @@ import {
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
 
 import Dashboard from "./pages/Dashboard";
 import GamingTracker from "./pages/GamingTracker";
@@ -28,8 +27,8 @@ import SuperAdminRoute from "./components/SuperAdminRoute";
 function App() {
   return (
     <Routes>
-      {/* PUBLIC PAGES */}
 
+      {/* PUBLIC PAGES */}
       <Route
         path="/"
         element={<Navigate to="/login" replace />}
@@ -50,13 +49,15 @@ function App() {
         element={<ForgotPassword />}
       />
 
+      {/* Old reset-link URLs redirect to new code flow */}
       <Route
         path="/reset-password"
-        element={<ResetPassword />}
+        element={
+          <Navigate to="/forgot-password" replace />
+        }
       />
 
-      {/* DASHBOARD - SHARED SIDEBAR */}
-
+      {/* DASHBOARD */}
       <Route
         path="/dashboard"
         element={
@@ -69,7 +70,6 @@ function App() {
       />
 
       {/* GAMING TRACKER */}
-
       <Route
         path="/gaming"
         element={
@@ -82,7 +82,6 @@ function App() {
       />
 
       {/* STRESS MONITOR */}
-
       <Route
         path="/stress"
         element={
@@ -95,7 +94,6 @@ function App() {
       />
 
       {/* SLEEP TRACKER */}
-
       <Route
         path="/sleep"
         element={
@@ -108,7 +106,6 @@ function App() {
       />
 
       {/* RISK REPORTS */}
-
       <Route
         path="/risk"
         element={
@@ -121,7 +118,6 @@ function App() {
       />
 
       {/* WEEKLY REPORT */}
-
       <Route
         path="/weekly-report"
         element={
@@ -134,7 +130,6 @@ function App() {
       />
 
       {/* PROFILE */}
-
       <Route
         path="/profile"
         element={
@@ -146,8 +141,7 @@ function App() {
         }
       />
 
-      {/* ADMIN PANEL */}
-
+      {/* ADMIN */}
       <Route
         path="/admin"
         element={
@@ -159,8 +153,7 @@ function App() {
         }
       />
 
-      {/* SUPER ADMIN MANAGEMENT */}
-
+      {/* SUPER ADMIN */}
       <Route
         path="/admin/staff"
         element={
@@ -171,6 +164,7 @@ function App() {
           </SuperAdminRoute>
         }
       />
+
     </Routes>
   );
 }

@@ -1,4 +1,7 @@
+
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import {
   CalendarDays,
   Camera,
@@ -15,13 +18,23 @@ import {
 
 import api from "../api/api";
 import { useNotifications } from "../context/NotificationContext";
+import { useAuth } from "../context/AuthContext";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL?.replace("/api", "") ||
   "http://localhost:5000";
 
+const emptyPassword = {
+  current_password: "",
+  code: "",
+  new_password: "",
+  confirm_password: "",
+};
+
 const Profile = () => {
   const { notify } = useNotifications();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
   const [profile, setProfile] = useState({
     full_name: "",
@@ -34,20 +47,40 @@ const Profile = () => {
     created_at: "",
   });
 
-  const [passwordData, setPasswordData] = useState({
-    current_password: "",
-    new_password: "",
-  });
+  const [passwordData, setPasswordData] =
+    useState(emptyPassword);
 
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [changingPassword, setChangingPassword] = useState(false);
-  const [removingImage, setRemovingImage] = useState(false);
+  const [codeRequested, setCodeRequested] =
+    useState(false);
 
-  const loadProfile = async (showErrorNotification = true) => {
+  const [passwordFeedback, setPasswordFeedback] =
+    useState("");
+
+  const [uploadingImage, setUploadingImage] =
+    useState(false);
+
+  const [savingProfile, setSavingProfile] =
+    useState(false);
+
+  const [changingPassword, setChangingPassword] =
+    useState(false);
+
+  const [removingImage, setRemovingImage] =
+    useState(false);
+
+  // =====================================
+  // LOAD PROFILE
+  // =====================================
+
+  const loadProfile = async (
+    showErrorNotification = true
+  ) => {
     try {
-      const response = await api.get("/auth/profile");
-      const user = response.data.user;
+      const { data } = await api.get(
+        "/auth/profile"
+      );
+
+      const user = data.user;
 
       setProfile({
         full_name: user.full_name || "",
@@ -76,18 +109,22 @@ const Profile = () => {
     loadProfile();
   }, []);
 
-  const initials = useMemo(() => {
-    if (!profile.full_name) {
-      return "GB";
-    }
+  // =====================================
+  // PROFILE DETAILS
+  // =====================================
 
-    return profile.full_name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase();
-  }, [profile.full_name]);
+  const initials = useMemo(
+    () =>
+      profile.full_name
+        ? profile.full_name
+            .split(" ")
+            .map((word) => word[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase()
+        : "GB",
+    [profile.full_name]
+  );
 
   const profileCompletion = useMemo(() => {
     const fields = [
@@ -99,15 +136,15 @@ const Profile = () => {
       profile.profile_image,
     ];
 
-    const completedFields = fields.filter(Boolean).length;
-
     return Math.round(
-      (completedFields / fields.length) * 100
+      (fields.filter(Boolean).length / fields.length) * 100
     );
   }, [profile]);
 
   const memberSince = profile.created_at
-    ? new Date(profile.created_at).toLocaleDateString()
+    ? new Date(
+        profile.created_at
+      ).toLocaleDateString()
     : "Not available";
 
   const profileImageUrl = profile.profile_image
@@ -117,8 +154,8 @@ const Profile = () => {
   const handleProfileChange = (event) => {
     const { name, value } = event.target;
 
-    setProfile((currentProfile) => ({
-      ...currentProfile,
+    setProfile((current) => ({
+      ...current,
       [name]: value,
     }));
   };
@@ -126,8 +163,8 @@ const Profile = () => {
   const handlePasswordChange = (event) => {
     const { name, value } = event.target;
 
-    setPasswordData((currentData) => ({
-      ...currentData,
+    setPasswordData((current) => ({
+      ...current,
       [name]: value,
     }));
   };
@@ -138,31 +175,31 @@ const Profile = () => {
         localStorage.getItem("gamebalance_user")
       );
 
-      if (!savedUser) {
-        return;
+      if (savedUser) {
+        localStorage.setItem(
+          "gamebalance_user",
+          JSON.stringify({
+            ...savedUser,
+            ...updatedFields,
+          })
+        );
       }
-
-      localStorage.setItem(
-        "gamebalance_user",
-        JSON.stringify({
-          ...savedUser,
-          ...updatedFields,
-        })
-      );
     } catch (error) {
       console.error(
-        "Failed to update local user data:",
+        "Could not update local user:",
         error
       );
     }
   };
 
+  // =====================================
+  // UPLOAD PROFILE IMAGE
+  // =====================================
+
   const handleImageChange = async (event) => {
     const file = event.target.files?.[0];
 
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     const allowedTypes = [
       "image/jpeg",
@@ -198,22 +235,23 @@ const Profile = () => {
 
       const formData = new FormData();
 
-      formData.append("profile_image", file);
+      formData.append(
+        "profile_image",
+        file
+      );
 
-      const response = await api.put(
+      const { data } = await api.put(
         "/auth/profile/image",
         formData
       );
 
-      const newProfileImage = response.data.profile_image;
-
-      setProfile((currentProfile) => ({
-        ...currentProfile,
-        profile_image: newProfileImage,
+      setProfile((current) => ({
+        ...current,
+        profile_image: data.profile_image,
       }));
 
       updateSavedUser({
-        profile_image: newProfileImage,
+        profile_image: data.profile_image,
       });
 
       notify({
@@ -222,7 +260,10 @@ const Profile = () => {
         duration: 4000,
       });
     } catch (error) {
-      console.error("Profile image upload error:", error);
+      console.error(
+        "Profile image upload error:",
+        error
+      );
 
       notify({
         type: "danger",
@@ -235,18 +276,27 @@ const Profile = () => {
     }
   };
 
+  // =====================================
+  // REMOVE PROFILE IMAGE
+  // =====================================
+
   const removeProfileImage = async () => {
-    if (!profile.profile_image || removingImage) {
+    if (
+      !profile.profile_image ||
+      removingImage
+    ) {
       return;
     }
 
     try {
       setRemovingImage(true);
 
-      await api.delete("/auth/profile/image");
+      await api.delete(
+        "/auth/profile/image"
+      );
 
-      setProfile((currentProfile) => ({
-        ...currentProfile,
+      setProfile((current) => ({
+        ...current,
         profile_image: "",
       }));
 
@@ -260,7 +310,10 @@ const Profile = () => {
         duration: 4000,
       });
     } catch (error) {
-      console.error("Profile image removal error:", error);
+      console.error(
+        "Profile image removal error:",
+        error
+      );
 
       notify({
         type: "danger",
@@ -272,31 +325,36 @@ const Profile = () => {
     }
   };
 
+  // =====================================
+  // UPDATE PROFILE
+  // =====================================
+
   const updateProfile = async (event) => {
     event.preventDefault();
 
-    if (savingProfile) {
-      return;
-    }
+    if (savingProfile) return;
 
     try {
       setSavingProfile(true);
 
-      const response = await api.put("/auth/profile", {
-        full_name: profile.full_name,
-        age: profile.age,
-        gender: profile.gender,
-        city: profile.city,
-      });
+      const { data } = await api.put(
+        "/auth/profile",
+        {
+          full_name: profile.full_name,
+          age: profile.age,
+          gender: profile.gender,
+          city: profile.city,
+        }
+      );
 
-      const updatedUser = response.data.user;
+      const user = data.user;
 
       updateSavedUser({
-        full_name: updatedUser.full_name,
-        age: updatedUser.age,
-        gender: updatedUser.gender,
-        city: updatedUser.city,
-        profile_image: updatedUser.profile_image,
+        full_name: user.full_name,
+        age: user.age,
+        gender: user.gender,
+        city: user.city,
+        profile_image: user.profile_image,
       });
 
       await loadProfile(false);
@@ -307,7 +365,10 @@ const Profile = () => {
         duration: 4000,
       });
     } catch (error) {
-      console.error("Profile update error:", error);
+      console.error(
+        "Profile update error:",
+        error
+      );
 
       notify({
         type: "danger",
@@ -319,83 +380,134 @@ const Profile = () => {
     }
   };
 
-  const changePassword = async (event) => {
-    event.preventDefault();
+  // =====================================
+  // STEP 1: EMAIL VERIFICATION CODE
+  // =====================================
 
-    if (changingPassword) {
+  const requestPasswordCode = async () => {
+    if (changingPassword) return;
+
+    if (!passwordData.current_password) {
+      setPasswordFeedback(
+        "Enter your current password first."
+      );
       return;
     }
 
-    if (
-      !passwordData.current_password ||
-      !passwordData.new_password
-    ) {
-      notify({
-        type: "warning",
-        title: "Enter Both Passwords",
-        duration: 4000,
-      });
-
-      return;
-    }
+    setChangingPassword(true);
+    setPasswordFeedback("");
 
     try {
-      setChangingPassword(true);
-
-      await api.put(
-        "/auth/change-password",
-        passwordData
+      const { data } = await api.post(
+        "/auth/password/request-change",
+        {
+          current_password:
+            passwordData.current_password,
+        }
       );
 
-      setPasswordData({
-        current_password: "",
-        new_password: "",
-      });
+      setCodeRequested(true);
 
-      notify({
-        type: "success",
-        title: "Password Changed",
-        duration: 4000,
-      });
+      setPasswordFeedback(
+        data.message ||
+        "Check your email for a verification code."
+      );
     } catch (error) {
-      console.error("Password change error:", error);
-
-      const status = error.response?.status;
-
-      if (status === 400 || status === 401) {
-        notify({
-          type: "danger",
-          title: "Current Password Incorrect",
-          duration: 4000,
-        });
-      } else {
-        notify({
-          type: "danger",
-          title: "Password Change Failed",
-          duration: 4000,
-        });
-      }
+      setPasswordFeedback(
+        error.response?.data?.message ||
+        "Could not send the code."
+      );
     } finally {
       setChangingPassword(false);
     }
   };
 
+  // =====================================
+  // STEP 2: CHANGE PASSWORD
+  // =====================================
+
+  const changePassword = async (event) => {
+    event.preventDefault();
+
+    if (
+      changingPassword ||
+      !codeRequested
+    ) {
+      return;
+    }
+
+    if (
+      passwordData.new_password !==
+      passwordData.confirm_password
+    ) {
+      setPasswordFeedback(
+        "New passwords do not match."
+      );
+      return;
+    }
+
+    setChangingPassword(true);
+    setPasswordFeedback("");
+
+    try {
+      await api.post(
+        "/auth/password/confirm-change",
+        {
+          code: passwordData.code,
+          new_password:
+            passwordData.new_password,
+        }
+      );
+
+      setPasswordData(emptyPassword);
+      setCodeRequested(false);
+
+      // Backend invalidates previous tokens.
+      logout();
+
+      navigate("/login", {
+        replace: true,
+      });
+
+      notify({
+        type: "success",
+        title: "Password Changed - Log In Again",
+        duration: 5000,
+      });
+    } catch (error) {
+      setPasswordFeedback(
+        error.response?.data?.message ||
+        "Password change failed."
+      );
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  // =====================================
+  // PROFILE PAGE
+  // =====================================
+
   return (
     <div className="module-page profile-page profile-command-page">
+
+      {/* PAGE HEADER */}
       <div className="module-header profile-top-header">
         <div>
           <h1>Profile Command Center</h1>
 
           <p>
-            Customize identity, account details, and
-            security settings.
+            Customize identity, account details,
+            and security settings.
           </p>
         </div>
       </div>
 
+      {/* PROFILE HERO */}
       <section className="profile-command-hero">
+
         <div className="profile-main-card">
-          <div className="profile-scan-lines"></div>
+          <div className="profile-scan-lines" />
 
           <div className="profile-avatar-zone">
             <div className="profile-ring">
@@ -443,19 +555,16 @@ const Profile = () => {
           <div className="profile-mini-badges">
             <span className="profile-chip">
               <Gamepad2 size={13} />
-
               {profile.role || "USER"}
             </span>
 
             <span className="profile-chip">
               <User size={13} />
-
               Age {profile.age || "N/A"}
             </span>
 
             <span className="profile-chip">
               <MapPin size={13} />
-
               {profile.city || "City not set"}
             </span>
           </div>
@@ -463,7 +572,6 @@ const Profile = () => {
           <div className="profile-progress compact-progress">
             <div className="profile-progress-top">
               <span>Profile Completion</span>
-
               <strong>{profileCompletion}%</strong>
             </div>
 
@@ -473,7 +581,7 @@ const Profile = () => {
                 style={{
                   width: `${profileCompletion}%`,
                 }}
-              ></div>
+              />
             </div>
           </div>
 
@@ -493,13 +601,14 @@ const Profile = () => {
           )}
         </div>
 
+        {/* PROFILE INFORMATION */}
         <div className="profile-identity-panel">
+
           <div className="profile-identity-card featured">
             <Sparkles />
 
             <div>
               <p>Display Name</p>
-
               <h3>
                 {profile.full_name || "Not set"}
               </h3>
@@ -511,8 +620,9 @@ const Profile = () => {
 
             <div>
               <p>Email</p>
-
-              <h3>{profile.email || "Not set"}</h3>
+              <h3>
+                {profile.email || "Not set"}
+              </h3>
             </div>
           </div>
 
@@ -521,8 +631,9 @@ const Profile = () => {
 
             <div>
               <p>Gender</p>
-
-              <h3>{profile.gender || "Not set"}</h3>
+              <h3>
+                {profile.gender || "Not set"}
+              </h3>
             </div>
           </div>
 
@@ -531,7 +642,6 @@ const Profile = () => {
 
             <div>
               <p>Member Since</p>
-
               <h3>{memberSince}</h3>
             </div>
           </div>
@@ -541,18 +651,21 @@ const Profile = () => {
 
             <div>
               <p>Location</p>
-
-              <h3>{profile.city || "Not set"}</h3>
+              <h3>
+                {profile.city || "Not set"}
+              </h3>
             </div>
           </div>
         </div>
       </section>
 
+      {/* EDIT PROFILE AND SECURITY */}
       <section className="profile-edit-grid">
+
+        {/* PROFILE EDIT FORM */}
         <div className="panel profile-panel">
           <div className="panel-title">
             <User />
-
             <h3>Edit Profile Details</h3>
           </div>
 
@@ -641,10 +754,10 @@ const Profile = () => {
           </form>
         </div>
 
+        {/* SECURITY SETTINGS */}
         <div className="panel profile-panel">
           <div className="panel-title">
             <Lock />
-
             <h3>Security Settings</h3>
           </div>
 
@@ -652,49 +765,123 @@ const Profile = () => {
             className="module-form"
             onSubmit={changePassword}
           >
-            <label>Current Password</label>
+            <label htmlFor="profile-current-password">
+              Current Password
+            </label>
 
             <input
+              id="profile-current-password"
               type="password"
               name="current_password"
+              autoComplete="current-password"
+              placeholder="Enter current password"
+              required
               value={passwordData.current_password}
               onChange={handlePasswordChange}
-              placeholder="Enter current password"
-              autoComplete="current-password"
-              required
-            />
-
-            <label>New Password</label>
-
-            <input
-              type="password"
-              name="new_password"
-              value={passwordData.new_password}
-              onChange={handlePasswordChange}
-              placeholder="Enter new password"
-              autoComplete="new-password"
-              required
             />
 
             <button
-              type="submit"
+              type="button"
+              onClick={requestPasswordCode}
               disabled={changingPassword}
             >
-              <Lock size={17} />
+              <Mail size={17} />
 
               {changingPassword
-                ? "Changing..."
-                : "Change Password"}
+                ? "Please wait..."
+                : "Send Email Verification Code"}
             </button>
+
+            {/* SHOW ONLY AFTER REQUESTING EMAIL CODE */}
+            {codeRequested && (
+              <>
+                <label htmlFor="profile-code">
+                  Six-Digit Email Code
+                </label>
+
+                <input
+                  id="profile-code"
+                  type="text"
+                  name="code"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  required
+                  placeholder="Enter email code"
+                  value={passwordData.code}
+                  onChange={(event) =>
+                    setPasswordData((old) => ({
+                      ...old,
+                      code: event.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 6),
+                    }))
+                  }
+                />
+
+                <label htmlFor="profile-new-password">
+                  New Password (10+ characters)
+                </label>
+
+                <input
+                  id="profile-new-password"
+                  type="password"
+                  name="new_password"
+                  minLength={10}
+                  autoComplete="new-password"
+                  required
+                  value={passwordData.new_password}
+                  onChange={handlePasswordChange}
+                />
+
+                <label htmlFor="profile-confirm-password">
+                  Confirm New Password
+                </label>
+
+                <input
+                  id="profile-confirm-password"
+                  type="password"
+                  name="confirm_password"
+                  autoComplete="new-password"
+                  required
+                  value={passwordData.confirm_password}
+                  onChange={handlePasswordChange}
+                />
+
+                <button
+                  type="submit"
+                  disabled={changingPassword}
+                >
+                  <Lock size={17} />
+
+                  {changingPassword
+                    ? "Verifying..."
+                    : "Verify Code & Change Password"}
+                </button>
+              </>
+            )}
+
+            {passwordFeedback && (
+              <p
+                className="result-box"
+                role="status"
+              >
+                {passwordFeedback}
+              </p>
+            )}
           </form>
 
           <div className="result-box security-note">
             <h3>Security Note</h3>
 
             <p>
-              Your account security matters. To update your password,
-              please enter your current password and choose a strong,
-              unique new password. Never share your password with anyone.
+              Enter your current password and
+              verify the six-digit code sent to
+              your registered email before choosing
+              a new password. After changing it,
+              you'll need to sign in again.
+              Never share your code.
             </p>
           </div>
         </div>
