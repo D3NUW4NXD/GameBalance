@@ -652,3 +652,79 @@
     gap: 6px !important;
   }
 }
+
+
+/* ==========================================
+   GAMEBALANCE - MOBILE HEADER ALIGNMENT
+   Keeps the existing UI design unchanged
+========================================== */
+
+@media (max-width: 900px) {
+
+  .dashboard-page.gb-mobile-shell
+  .dashboard-content > header.dashboard-header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .dashboard-page.gb-mobile-shell
+  .dashboard-header > div:first-child {
+    min-width: 0;
+  }
+
+  .dashboard-page.gb-mobile-shell
+  .dashboard-header h1 {
+    font-size: clamp(16px, 4.5vw, 24px) !important;
+    white-space: nowrap;
+  }
+
+  .dashboard-page.gb-mobile-shell
+  .dashboard-header .gb-header-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-end !important;
+    width: auto !important;
+    gap: 7px !important;
+  }
+
+  .dashboard-page.gb-mobile-shell
+  .gb-header-actions .gb-bell-trigger {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
+
+  .dashboard-page.gb-mobile-shell
+  .gb-header-actions .user-pill {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    max-width: 90px;
+    padding: 7px 10px;
+    font-size: 11px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (max-width: 350px) {
+
+  .dashboard-page.gb-mobile-shell
+  .dashboard-header .gb-header-actions {
+    gap: 5px !important;
+  }
+
+  .dashboard-page.gb-mobile-shell
+  .gb-header-actions .user-pill {
+    max-width: 70px;
+    padding: 7px 6px;
+  }
+}
