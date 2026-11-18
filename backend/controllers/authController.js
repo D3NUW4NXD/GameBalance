@@ -112,19 +112,24 @@ exports.register = async (req, res) => {
 // LOGIN USER
 // =====================================
 
+
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body || {};
 
-    if (!email || !password) {
+    if (
+      typeof email !== "string" ||
+      !email.trim() ||
+      typeof password !== "string" ||
+      !password
+    ) {
       return res.status(400).json({
         success: false,
-        message:
-          "Email and password are required",
+        message: "Email and password are required",
       });
     }
 
-    // Load account and calculate current ban status.
+    // Calculate the current ban status using MySQL UTC time.
     const [users] = await db.query(
       `SELECT *,
         CASE
@@ -135,14 +140,33 @@ exports.login = async (req, res) => {
             )
           THEN 1
           ELSE 0
-        END AS is_banned
+        END AS is_banned,
+
+        DATE_FORMAT(
+          ban_expires_at,
+          '%Y-%m-%dT%H:%i:%sZ'
+        ) AS ban_expires_at_utc,
+
+        CASE
+          WHEN ban_type = 'TEMPORARY'
+          THEN GREATEST(
+            0,
+            TIMESTAMPDIFF(
+              SECOND,
+              UTC_TIMESTAMP(),
+              ban_expires_at
+            )
+          )
+          ELSE NULL
+        END AS ban_remaining_seconds
+
        FROM users
        WHERE email = ?
        LIMIT 1`,
-      [email]
+      [email.trim()]
     );
 
-    if (users.length === 0) {
+    if (!users.length) {
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
@@ -151,42 +175,51 @@ exports.login = async (req, res) => {
 
     const user = users[0];
 
-    // Verify password.
-    const isPasswordValid = await bcrypt.compare(
+    // Verify password BEFORE showing any ban information.
+    const passwordMatches = await bcrypt.compare(
       password,
       user.password_hash
     );
 
-    if (!isPasswordValid) {
+    if (!passwordMatches) {
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
       });
     }
 
-    // Block temporarily or permanently banned users.
+    // Suspended users cannot log in.
     if (Number(user.is_banned) === 1) {
       return res.status(403).json({
         success: false,
-        message:
-          "Your GameBalance account is suspended. Contact an administrator.",
+        code: "ACCOUNT_BANNED",
+        message: "Your GameBalance account is suspended.",
+        ban: {
+          type: user.ban_type,
+          reason: user.ban_reason || "No reason provided.",
+
+          expires_at_utc:
+            user.ban_type === "TEMPORARY"
+              ? user.ban_expires_at_utc
+              : null,
+
+          remaining_seconds:
+            user.ban_type === "TEMPORARY"
+              ? Number(user.ban_remaining_seconds || 0)
+              : null,
+        },
       });
     }
 
-    // Include token version so account management
-    // and password resets can invalidate old sessions.
+    // Normal login stays unchanged.
     const token = jwt.sign(
       {
         user_id: user.user_id,
         role: user.role,
-        token_version: Number(
-          user.token_version || 0
-        ),
+        token_version: Number(user.token_version || 0),
       },
       process.env.JWT_SECRET,
-      {
-        expiresIn: "1d",
-      }
+      { expiresIn: "1d" }
     );
 
     return res.status(200).json({
@@ -213,6 +246,7 @@ exports.login = async (req, res) => {
     });
   }
 };
+
 
 // =====================================
 // GET USER PROFILE

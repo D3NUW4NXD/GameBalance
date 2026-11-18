@@ -15,7 +15,10 @@ const NotificationContext = createContext(null);
 
 const DEFAULT_DURATION = 4000;
 
-// Determine which notification to display after an API action.
+// =====================================
+// API ACTION NOTIFICATIONS
+// =====================================
+
 const getActionNotification = (config, success = true) => {
   if (!config) return null;
 
@@ -30,7 +33,7 @@ const getActionNotification = (config, success = true) => {
   try {
     pathname = new URL(pathname, "http://localhost").pathname;
   } catch {
-    // Keep the original relative path.
+    // Keep original relative path.
   }
 
   pathname = pathname
@@ -41,14 +44,17 @@ const getActionNotification = (config, success = true) => {
   const isDelete = method === "delete";
   const isUpdate = method === "put" || method === "patch";
 
-  // Profile already uses its own short notifications.
-  // Exclude these endpoints to prevent duplicate popups.
+  // Profile handles its own notifications.
   if (
     pathname.startsWith("/auth/profile") ||
     pathname.startsWith("/auth/change-password")
   ) {
     return null;
   }
+
+  // =====================================
+  // LOGIN NOTIFICATION
+  // =====================================
 
   if (pathname === "/auth/login") {
     return {
@@ -57,12 +63,22 @@ const getActionNotification = (config, success = true) => {
     };
   }
 
+  // =====================================
+  // REGISTER NOTIFICATION
+  // =====================================
+
   if (pathname === "/auth/register") {
     return {
       type: success ? "success" : "danger",
-      title: success ? "Registration Successful" : "Registration Failed",
+      title: success
+        ? "Registration Successful"
+        : "Registration Failed",
     };
   }
+
+  // =====================================
+  // GAMING TRACKER
+  // =====================================
 
   if (pathname.startsWith("/gaming")) {
     return {
@@ -71,11 +87,15 @@ const getActionNotification = (config, success = true) => {
         ? isDelete
           ? "Gaming Session Deleted"
           : isUpdate
-          ? "Gaming Session Updated"
-          : "Gaming Session Saved"
+            ? "Gaming Session Updated"
+            : "Gaming Session Saved"
         : "Gaming Action Failed",
     };
   }
+
+  // =====================================
+  // STRESS MONITOR
+  // =====================================
 
   if (pathname.startsWith("/stress")) {
     return {
@@ -88,6 +108,10 @@ const getActionNotification = (config, success = true) => {
     };
   }
 
+  // =====================================
+  // SLEEP TRACKER
+  // =====================================
+
   if (pathname.startsWith("/sleep")) {
     return {
       type: success ? "success" : "danger",
@@ -95,11 +119,15 @@ const getActionNotification = (config, success = true) => {
         ? isDelete
           ? "Sleep Record Deleted"
           : isUpdate
-          ? "Sleep Record Updated"
-          : "Sleep Record Saved"
+            ? "Sleep Record Updated"
+            : "Sleep Record Saved"
         : "Sleep Action Failed",
     };
   }
+
+  // =====================================
+  // RISK ANALYSIS
+  // =====================================
 
   if (pathname.includes("/analysis/generate")) {
     return {
@@ -110,12 +138,22 @@ const getActionNotification = (config, success = true) => {
     };
   }
 
+  // =====================================
+  // ADMIN ACTIONS
+  // =====================================
+
   if (pathname.startsWith("/admin")) {
     return {
       type: success ? "success" : "danger",
-      title: success ? "Admin Changes Saved" : "Admin Action Failed",
+      title: success
+        ? "Admin Changes Saved"
+        : "Admin Action Failed",
     };
   }
+
+  // =====================================
+  // OTHER ACTIONS
+  // =====================================
 
   return {
     type: success ? "success" : "danger",
@@ -126,6 +164,10 @@ const getActionNotification = (config, success = true) => {
       : "Action Failed",
   };
 };
+
+// =====================================
+// WELLNESS ALERT HELPERS
+// =====================================
 
 const getAlertType = (alert) => {
   const level = [
@@ -152,7 +194,10 @@ const getAlertType = (alert) => {
     return "warning";
   }
 
-  if (level.includes("LOW") || level.includes("SAFE")) {
+  if (
+    level.includes("LOW") ||
+    level.includes("SAFE")
+  ) {
     return "success";
   }
 
@@ -169,7 +214,10 @@ const getAlertTitle = (alert) => {
     .join(" ")
     .toUpperCase();
 
-  if (level.includes("HIGH") || level.includes("CRITICAL")) {
+  if (
+    level.includes("HIGH") ||
+    level.includes("CRITICAL")
+  ) {
     return "High Risk Detected";
   }
 
@@ -204,12 +252,20 @@ const getCurrentUserId = () => {
   }
 };
 
+// =====================================
+// NOTIFICATION PROVIDER
+// =====================================
+
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
 
   const timersRef = useRef(new Map());
   const recentlyShownRef = useRef(new Map());
   const fetchingAlertsRef = useRef(false);
+
+  // =====================================
+  // REMOVE NOTIFICATION
+  // =====================================
 
   const removeNotification = useCallback((id) => {
     setNotifications((current) =>
@@ -224,6 +280,10 @@ export const NotificationProvider = ({ children }) => {
     }
   }, []);
 
+  // =====================================
+  // CREATE NOTIFICATION
+  // =====================================
+
   const notify = useCallback(
     ({
       title = "GameBalance Notification",
@@ -234,15 +294,18 @@ export const NotificationProvider = ({ children }) => {
       const now = Date.now();
       const notificationKey = `${type}:${title}`;
 
-      // Prevent repeated notifications from appearing together.
       const lastShown =
         recentlyShownRef.current.get(notificationKey) || 0;
 
+      // Avoid duplicate notifications.
       if (now - lastShown < 1200) {
         return null;
       }
 
-      recentlyShownRef.current.set(notificationKey, now);
+      recentlyShownRef.current.set(
+        notificationKey,
+        now
+      );
 
       const id = `${now}-${Math.random()
         .toString(36)
@@ -276,6 +339,10 @@ export const NotificationProvider = ({ children }) => {
     [removeNotification]
   );
 
+  // =====================================
+  // CLEAR ALL NOTIFICATIONS
+  // =====================================
+
   const clearNotifications = useCallback(() => {
     timersRef.current.forEach((timer) => {
       clearTimeout(timer);
@@ -285,15 +352,20 @@ export const NotificationProvider = ({ children }) => {
     setNotifications([]);
   }, []);
 
-  // Automatically display notifications for API actions.
+  // =====================================
+  // AUTOMATIC API NOTIFICATIONS
+  // =====================================
+
   useEffect(() => {
     const interceptorId = api.interceptors.response.use(
+      // SUCCESS RESPONSE
       (response) => {
         if (response.config?.toast === false) {
           return response;
         }
 
-        const successful = response.data?.success !== false;
+        const successful =
+          response.data?.success !== false;
 
         const notification = getActionNotification(
           response.config,
@@ -306,7 +378,36 @@ export const NotificationProvider = ({ children }) => {
 
         return response;
       },
+
+      // ERROR RESPONSE
       (error) => {
+        // =====================================
+        // NEW: BANNED ACCOUNT LOGIN
+        // =====================================
+        //
+        // Backend verifies the password before
+        // returning ACCOUNT_BANNED.
+        //
+        // Login.jsx displays the suspension
+        // reason and countdown itself.
+        //
+        // Prevent the generic "Login Failed"
+        // toast only for this specific response.
+        // =====================================
+
+        const isBannedLogin =
+          error.response?.status === 403 &&
+          error.response?.data?.code ===
+            "ACCOUNT_BANNED";
+
+        if (isBannedLogin) {
+          return Promise.reject(error);
+        }
+
+        // =====================================
+        // NORMAL ERROR NOTIFICATIONS
+        // =====================================
+
         if (error.config?.toast !== false) {
           const notification = getActionNotification(
             error.config,
@@ -327,41 +428,64 @@ export const NotificationProvider = ({ children }) => {
     };
   }, [notify]);
 
-  // Load new wellness alerts from the backend.
+  // =====================================
+  // FETCH BACKEND WELLNESS ALERTS
+  // =====================================
+
   const fetchBackendAlerts = useCallback(async () => {
-    const token = localStorage.getItem("gamebalance_token");
+    const token = localStorage.getItem(
+      "gamebalance_token"
+    );
+
     const userId = getCurrentUserId();
 
-    if (!token || !userId || fetchingAlertsRef.current) {
+    if (
+      !token ||
+      !userId ||
+      fetchingAlertsRef.current
+    ) {
       return;
     }
 
     fetchingAlertsRef.current = true;
 
     try {
-      const response = await api.get("/analysis/alerts", {
-        toast: false,
-      });
+      const response = await api.get(
+        "/analysis/alerts",
+        {
+          toast: false,
+        }
+      );
 
       const alerts =
         response.data?.alerts ||
         response.data?.data?.alerts ||
         [];
 
-      if (!Array.isArray(alerts) || alerts.length === 0) {
+      if (
+        !Array.isArray(alerts) ||
+        alerts.length === 0
+      ) {
         return;
       }
 
-      // Do not show another user's alerts after a logout/login.
+      // Prevent alerts from appearing for
+      // another user after account switching.
       if (
-        token !== localStorage.getItem("gamebalance_token") ||
+        token !== localStorage.getItem(
+          "gamebalance_token"
+        ) ||
         userId !== getCurrentUserId()
       ) {
         return;
       }
 
-      // Store seen IDs separately for each user.
-      const storageKey = `gamebalance_seen_alerts_${userId}`;
+      // =====================================
+      // TRACK SEEN ALERTS
+      // =====================================
+
+      const storageKey =
+        `gamebalance_seen_alerts_${userId}`;
 
       let seenIds = [];
 
@@ -370,32 +494,53 @@ export const NotificationProvider = ({ children }) => {
           localStorage.getItem(storageKey) || "[]"
         );
 
-        seenIds = Array.isArray(saved) ? saved : [];
+        seenIds = Array.isArray(saved)
+          ? saved
+          : [];
       } catch {
         seenIds = [];
       }
 
-      const seenSet = new Set(seenIds.map(String));
-
-      const sortedAlerts = [...alerts].sort((a, b) => {
-        return (
-          new Date(b.created_at || 0).getTime() -
-          new Date(a.created_at || 0).getTime()
-        );
-      });
-
-      const unseenAlerts = sortedAlerts.filter(
-        (alert) => !seenSet.has(getAlertId(alert))
+      const seenSet = new Set(
+        seenIds.map(String)
       );
 
-      unseenAlerts.slice(0, 3).forEach((alert) => {
-        notify({
-          type: getAlertType(alert),
-          title: getAlertTitle(alert),
-          duration: 5000,
-          sourceId: getAlertId(alert),
-        });
-      });
+      const sortedAlerts = [...alerts].sort(
+        (a, b) => {
+          return (
+            new Date(
+              b.created_at || 0
+            ).getTime() -
+            new Date(
+              a.created_at || 0
+            ).getTime()
+          );
+        }
+      );
+
+      const unseenAlerts = sortedAlerts.filter(
+        (alert) =>
+          !seenSet.has(getAlertId(alert))
+      );
+
+      // =====================================
+      // SHOW NEW ALERTS
+      // =====================================
+
+      unseenAlerts.slice(0, 3).forEach(
+        (alert) => {
+          notify({
+            type: getAlertType(alert),
+            title: getAlertTitle(alert),
+            duration: 5000,
+            sourceId: getAlertId(alert),
+          });
+        }
+      );
+
+      // =====================================
+      // SAVE SEEN ALERT IDS
+      // =====================================
 
       unseenAlerts.forEach((alert) => {
         seenSet.add(getAlertId(alert));
@@ -403,19 +548,27 @@ export const NotificationProvider = ({ children }) => {
 
       localStorage.setItem(
         storageKey,
-        JSON.stringify(Array.from(seenSet).slice(-150))
+        JSON.stringify(
+          Array.from(seenSet).slice(-150)
+        )
       );
+
     } catch (error) {
-      // Avoid showing a popup every 30 seconds
-      // if the alerts endpoint is temporarily unavailable.
+      // Don't show a popup repeatedly
+      // when the alerts API is unavailable.
       console.error(
         "Unable to load wellness alerts:",
         error
       );
+
     } finally {
       fetchingAlertsRef.current = false;
     }
   }, [notify]);
+
+  // =====================================
+  // REFRESH ALERTS EVERY 30 SECONDS
+  // =====================================
 
   useEffect(() => {
     fetchBackendAlerts();
@@ -429,9 +582,15 @@ export const NotificationProvider = ({ children }) => {
     };
   }, [fetchBackendAlerts]);
 
+  // =====================================
+  // REFRESH WHEN TAB BECOMES VISIBLE
+  // =====================================
+
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
+      if (
+        document.visibilityState === "visible"
+      ) {
         fetchBackendAlerts();
       }
     };
@@ -449,14 +608,25 @@ export const NotificationProvider = ({ children }) => {
     };
   }, [fetchBackendAlerts]);
 
+  // =====================================
+  // CLEANUP NOTIFICATION TIMERS
+  // =====================================
+
   useEffect(() => {
     const timers = timersRef.current;
 
     return () => {
-      timers.forEach((timer) => clearTimeout(timer));
+      timers.forEach((timer) => {
+        clearTimeout(timer);
+      });
+
       timers.clear();
     };
   }, []);
+
+  // =====================================
+  // PROVIDER
+  // =====================================
 
   return (
     <NotificationContext.Provider
@@ -479,8 +649,14 @@ export const NotificationProvider = ({ children }) => {
   );
 };
 
+// =====================================
+// USE NOTIFICATIONS HOOK
+// =====================================
+
 export const useNotifications = () => {
-  const context = useContext(NotificationContext);
+  const context = useContext(
+    NotificationContext
+  );
 
   if (!context) {
     throw new Error(
