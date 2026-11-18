@@ -5,6 +5,10 @@ const fs = require("fs");
 const path = require("path");
 const db = require("../config/db");
 
+// =====================================
+// PROFILE IMAGE HELPER
+// =====================================
+
 const deleteOldProfileImage = (profileImagePath) => {
   if (!profileImagePath) return;
 
@@ -20,7 +24,7 @@ const deleteOldProfileImage = (profileImagePath) => {
 };
 
 // =====================================
-// REGISTER
+// REGISTER USER
 // =====================================
 
 exports.register = async (req, res) => {
@@ -45,7 +49,8 @@ exports.register = async (req, res) => {
     if (password.length < 6) {
       return res.status(400).json({
         success: false,
-        message: "Password must be at least 6 characters",
+        message:
+          "Password must be at least 6 characters",
       });
     }
 
@@ -57,8 +62,9 @@ exports.register = async (req, res) => {
       });
     }
 
+    // Check whether the email already exists.
     const [existingUsers] = await db.query(
-      "SELECT user_id FROM users WHERE email = ?",
+      "SELECT user_id FROM users WHERE email = ? LIMIT 1",
       [email]
     );
 
@@ -103,7 +109,7 @@ exports.register = async (req, res) => {
 };
 
 // =====================================
-// LOGIN
+// LOGIN USER
 // =====================================
 
 exports.login = async (req, res) => {
@@ -113,12 +119,26 @@ exports.login = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: "Email and password are required",
+        message:
+          "Email and password are required",
       });
     }
 
+    // Load account and calculate current ban status.
     const [users] = await db.query(
-      "SELECT * FROM users WHERE email = ?",
+      `SELECT *,
+        CASE
+          WHEN ban_type = 'PERMANENT'
+            OR (
+              ban_type = 'TEMPORARY'
+              AND ban_expires_at > UTC_TIMESTAMP()
+            )
+          THEN 1
+          ELSE 0
+        END AS is_banned
+       FROM users
+       WHERE email = ?
+       LIMIT 1`,
       [email]
     );
 
@@ -131,6 +151,7 @@ exports.login = async (req, res) => {
 
     const user = users[0];
 
+    // Verify password.
     const isPasswordValid = await bcrypt.compare(
       password,
       user.password_hash
@@ -143,16 +164,29 @@ exports.login = async (req, res) => {
       });
     }
 
-    // New sessions include a version so
-    // password resets can invalidate old sessions.
+    // Block temporarily or permanently banned users.
+    if (Number(user.is_banned) === 1) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Your GameBalance account is suspended. Contact an administrator.",
+      });
+    }
+
+    // Include token version so account management
+    // and password resets can invalidate old sessions.
     const token = jwt.sign(
       {
         user_id: user.user_id,
         role: user.role,
-        token_version: Number(user.token_version || 0),
+        token_version: Number(
+          user.token_version || 0
+        ),
       },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      {
+        expiresIn: "1d",
+      }
     );
 
     return res.status(200).json({
@@ -181,7 +215,7 @@ exports.login = async (req, res) => {
 };
 
 // =====================================
-// GET PROFILE
+// GET USER PROFILE
 // =====================================
 
 exports.getProfile = async (req, res) => {
@@ -218,13 +252,14 @@ exports.getProfile = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Server error while loading profile",
+      message:
+        "Server error while loading profile",
     });
   }
 };
 
 // =====================================
-// UPDATE PROFILE
+// UPDATE USER PROFILE
 // =====================================
 
 exports.updateProfile = async (req, res) => {
@@ -253,7 +288,10 @@ exports.updateProfile = async (req, res) => {
 
     const [result] = await db.query(
       `UPDATE users
-       SET full_name = ?, age = ?, gender = ?, city = ?
+       SET full_name = ?,
+           age = ?,
+           gender = ?,
+           city = ?
        WHERE user_id = ?`,
       [
         full_name,
@@ -293,11 +331,15 @@ exports.updateProfile = async (req, res) => {
       user: updatedUsers[0],
     });
   } catch (error) {
-    console.error("Update profile error:", error);
+    console.error(
+      "Update profile error:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
-      message: "Server error while updating profile",
+      message:
+        "Server error while updating profile",
     });
   }
 };
@@ -316,7 +358,9 @@ exports.uploadProfileImage = async (req, res) => {
     }
 
     const [users] = await db.query(
-      "SELECT profile_image FROM users WHERE user_id = ?",
+      `SELECT profile_image
+       FROM users
+       WHERE user_id = ?`,
       [req.user.user_id]
     );
 
@@ -327,7 +371,9 @@ exports.uploadProfileImage = async (req, res) => {
       });
     }
 
-    deleteOldProfileImage(users[0].profile_image);
+    deleteOldProfileImage(
+      users[0].profile_image
+    );
 
     const profileImagePath =
       `/uploads/profile/${req.file.filename}`;
@@ -336,32 +382,42 @@ exports.uploadProfileImage = async (req, res) => {
       `UPDATE users
        SET profile_image = ?
        WHERE user_id = ?`,
-      [profileImagePath, req.user.user_id]
+      [
+        profileImagePath,
+        req.user.user_id,
+      ]
     );
 
     return res.status(200).json({
       success: true,
-      message: "Profile image uploaded successfully",
+      message:
+        "Profile image uploaded successfully",
       profile_image: profileImagePath,
     });
   } catch (error) {
-    console.error("Upload profile image error:", error);
+    console.error(
+      "Upload profile image error:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
-      message: "Server error while uploading profile image",
+      message:
+        "Server error while uploading profile image",
     });
   }
 };
 
 // =====================================
-// DELETE PROFILE IMAGE
+// REMOVE PROFILE IMAGE
 // =====================================
 
 exports.deleteProfileImage = async (req, res) => {
   try {
     const [users] = await db.query(
-      "SELECT profile_image FROM users WHERE user_id = ?",
+      `SELECT profile_image
+       FROM users
+       WHERE user_id = ?`,
       [req.user.user_id]
     );
 
@@ -372,7 +428,9 @@ exports.deleteProfileImage = async (req, res) => {
       });
     }
 
-    deleteOldProfileImage(users[0].profile_image);
+    deleteOldProfileImage(
+      users[0].profile_image
+    );
 
     await db.query(
       `UPDATE users
@@ -383,14 +441,19 @@ exports.deleteProfileImage = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Profile image removed successfully",
+      message:
+        "Profile image removed successfully",
     });
   } catch (error) {
-    console.error("Delete profile image error:", error);
+    console.error(
+      "Delete profile image error:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
-      message: "Server error while removing profile image",
+      message:
+        "Server error while removing profile image",
     });
   }
 };

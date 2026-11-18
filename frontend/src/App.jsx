@@ -5,10 +5,12 @@ import {
   Routes,
 } from "react-router-dom";
 
+// PUBLIC PAGES
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 
+// USER PAGES
 import Dashboard from "./pages/Dashboard";
 import GamingTracker from "./pages/GamingTracker";
 import StressMonitor from "./pages/StressMonitor";
@@ -16,22 +18,35 @@ import SleepTracker from "./pages/SleepTracker";
 import RiskReports from "./pages/RiskReports";
 import WeeklyWellnessReport from "./pages/WeeklyWellnessReport";
 import Profile from "./pages/Profile";
+
+// ADMIN PAGES
 import AdminDashboard from "./pages/AdminDashboard";
 import ManageAdmins from "./pages/ManageAdmins";
+import ManageUsers from "./pages/ManageUsers";
 
+// ROUTE PROTECTION
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
-import AppLayout from "./components/AppLayout";
 import SuperAdminRoute from "./components/SuperAdminRoute";
+
+// LAYOUT
+import AppLayout from "./components/AppLayout";
 
 function App() {
   return (
     <Routes>
+      {/* ====================================
+          PUBLIC ROUTES
+      ==================================== */}
 
-      {/* PUBLIC PAGES */}
       <Route
         path="/"
-        element={<Navigate to="/login" replace />}
+        element={
+          <Navigate
+            to="/login"
+            replace
+          />
+        }
       />
 
       <Route
@@ -49,15 +64,20 @@ function App() {
         element={<ForgotPassword />}
       />
 
-      {/* Old reset-link URLs redirect to new code flow */}
       <Route
         path="/reset-password"
         element={
-          <Navigate to="/forgot-password" replace />
+          <Navigate
+            to="/forgot-password"
+            replace
+          />
         }
       />
 
-      {/* DASHBOARD */}
+      {/* ====================================
+          USER DASHBOARD
+      ==================================== */}
+
       <Route
         path="/dashboard"
         element={
@@ -69,7 +89,10 @@ function App() {
         }
       />
 
-      {/* GAMING TRACKER */}
+      {/* ====================================
+          GAMING TRACKER
+      ==================================== */}
+
       <Route
         path="/gaming"
         element={
@@ -81,7 +104,10 @@ function App() {
         }
       />
 
-      {/* STRESS MONITOR */}
+      {/* ====================================
+          STRESS MONITOR
+      ==================================== */}
+
       <Route
         path="/stress"
         element={
@@ -93,7 +119,10 @@ function App() {
         }
       />
 
-      {/* SLEEP TRACKER */}
+      {/* ====================================
+          SLEEP TRACKER
+      ==================================== */}
+
       <Route
         path="/sleep"
         element={
@@ -105,7 +134,10 @@ function App() {
         }
       />
 
-      {/* RISK REPORTS */}
+      {/* ====================================
+          RISK REPORTS
+      ==================================== */}
+
       <Route
         path="/risk"
         element={
@@ -117,7 +149,10 @@ function App() {
         }
       />
 
-      {/* WEEKLY REPORT */}
+      {/* ====================================
+          WEEKLY WELLNESS REPORT
+      ==================================== */}
+
       <Route
         path="/weekly-report"
         element={
@@ -129,7 +164,10 @@ function App() {
         }
       />
 
-      {/* PROFILE */}
+      {/* ====================================
+          USER PROFILE
+      ==================================== */}
+
       <Route
         path="/profile"
         element={
@@ -141,7 +179,10 @@ function App() {
         }
       />
 
-      {/* ADMIN */}
+      {/* ====================================
+          ADMIN DASHBOARD
+      ==================================== */}
+
       <Route
         path="/admin"
         element={
@@ -153,7 +194,10 @@ function App() {
         }
       />
 
-      {/* SUPER ADMIN */}
+      {/* ====================================
+          SUPER ADMIN - MANAGE ADMINS
+      ==================================== */}
+
       <Route
         path="/admin/staff"
         element={
@@ -165,6 +209,20 @@ function App() {
         }
       />
 
+      {/* ====================================
+          SUPER ADMIN - MANAGE USERS
+      ==================================== */}
+
+      <Route
+        path="/admin/users/manage"
+        element={
+          <SuperAdminRoute>
+            <AppLayout>
+              <ManageUsers />
+            </AppLayout>
+          </SuperAdminRoute>
+        }
+      />
     </Routes>
   );
 }
