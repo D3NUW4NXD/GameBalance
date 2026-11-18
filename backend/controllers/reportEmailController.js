@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const { isEmailConfigured, sendTransactionalEmail } = require("../services/transactionalEmail");
 
 // Escape all database-provided text before putting it in an HTML email.
 const escapeHtml = (value) =>
@@ -15,7 +16,7 @@ const num = (value) => Number(value || 0);
 exports.emailWeeklyWellnessReport = async (req, res) => {
   const userId = req.user.user_id; // Authenticated user, never req.body.user_id.
 
-  if (!process.env.RESEND_API_KEY || !process.env.REPORT_EMAIL_FROM) {
+  if (!isEmailConfigured(process.env.REPORT_EMAIL_FROM)) {
     return res.status(503).json({
       success: false,
       message: "Report email is not configured yet.",
@@ -188,37 +189,28 @@ exports.emailWeeklyWellnessReport = async (req, res) => {
       `Automated wellness summary, not a medical diagnosis.`,
     ].join("\n");
 
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      signal: AbortSignal.timeout(15000),
-      body: JSON.stringify({
+    let delivery;
+    try {
+      delivery = await sendTransactionalEmail({
         from: process.env.REPORT_EMAIL_FROM,
-        to: [user.email],
+        to: user.email,
         subject: "GameBalance | Your Weekly Wellness Report",
         html,
         text,
-      }),
-    });
-
-    const result = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      // Never log the API key or full report content.
-      console.error("Resend report email rejected:", response.status, result.name, result.message);
+      });
+    } catch (error) {
+      console.error("Weekly report email provider error:", error.message);
+      // Do not show the user internal provider payloads or API credentials.
       return res.status(502).json({
         success: false,
-        message: "The email provider rejected the report. Check the verified sender domain and Netlify Function logs.",
+        message: "The email provider could not accept the report. Please try again later.",
       });
     }
 
     return res.status(200).json({
       success: true,
       message: `Report email accepted for ${user.email}. Check your inbox and spam folder.`,
-      email_id: result.id || null,
+      email_id: delivery.id,
     });
   } catch (error) {
     console.error("Weekly report email error:", error.message);

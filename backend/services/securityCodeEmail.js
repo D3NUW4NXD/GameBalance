@@ -1,3 +1,4 @@
+const { sendTransactionalEmail } = require("./transactionalEmail");
 
 const escapeHtml = (value) =>
   String(value ?? "").replace(/[&<>"']/g, (c) =>
@@ -16,14 +17,9 @@ module.exports = async function securityCodeEmail({
   code,
   purpose,
 }) {
-  const key = process.env.RESEND_API_KEY;
   const from =
     process.env.PASSWORD_EMAIL_FROM ||
     process.env.REPORT_EMAIL_FROM;
-
-  if (!key || !from) {
-    throw new Error("Security email is not configured");
-  }
 
   const title =
     purpose === "RESET"
@@ -64,31 +60,11 @@ module.exports = async function securityCodeEmail({
     </div>
   `;
 
-  const response = await fetch(
-    "https://api.resend.com/emails",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from,
-        to: [to],
-        subject: `GameBalance: ${title}`,
-        html,
-        text,
-      }),
-      signal: AbortSignal.timeout(15000),
-    }
-  );
-
-  if (!response.ok) {
-    console.error(
-      "Security email rejected by Resend:",
-      response.status
-    );
-
-    throw new Error("Email service rejected the request");
-  }
+  await sendTransactionalEmail({
+    from,
+    to,
+    subject: `GameBalance: ${title}`,
+    html,
+    text,
+  });
 };
