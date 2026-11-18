@@ -205,7 +205,11 @@ const Dashboard = () => {
           <NotificationBell />
 
           
-          <div className="user-pill">
+          <div
+            className="user-pill"
+            title={user?.full_name || "User"}
+            aria-label={`Signed in as ${user?.full_name || "User"}`}
+          >
             {user?.full_name || "User"}
           </div>
 

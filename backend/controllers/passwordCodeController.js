@@ -6,6 +6,7 @@ const db = require("../config/db");
 const sendSecurityEmail = require(
   "../services/securityCodeEmail"
 );
+const { isEmailConfigured } = require("../services/transactionalEmail");
 
 const GENERIC_MESSAGE =
   "If this email is registered, a six-digit code " +
@@ -29,13 +30,9 @@ const validPassword = (password) =>
   Buffer.byteLength(password, "utf8") <= 72;
 
 const emailConfigured = (res) => {
-  if (
-    !process.env.RESEND_API_KEY ||
-    !(
-      process.env.PASSWORD_EMAIL_FROM ||
-      process.env.REPORT_EMAIL_FROM
-    )
-  ) {
+  if (!isEmailConfigured(
+    process.env.PASSWORD_EMAIL_FROM || process.env.REPORT_EMAIL_FROM
+  )) {
     res.status(503).json({
       success: false,
       message: "Password email service is not configured",
