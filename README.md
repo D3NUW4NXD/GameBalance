@@ -120,7 +120,7 @@ GitHub: [github.com/D3NUW4NXD](https://github.com/D3NUW4NXD)
 
 ---
 
-### ☕ Support
+### Support
 
 If you like **GameBalance** or find this project useful, consider supporting my work by buying me a coffee. Your support helps me continue learning, developing, and building new projects.
 
