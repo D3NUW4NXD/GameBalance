@@ -1,12 +1,6 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
 
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-
 import {
   ShieldCheck,
   RefreshCw,
@@ -15,10 +9,7 @@ import {
 } from "lucide-react";
 
 import api from "../api/api";
-
-// =====================================
-// HELPERS
-// =====================================
+import AccountActionModal from "../components/AccountActionModal";
 
 const readError = (error) =>
   error.response?.data?.message ||
@@ -30,32 +21,25 @@ const initialForm = {
   password: "",
 };
 
-// =====================================
-// MANAGE USERS PAGE
-// =====================================
-
 export default function ManageUsers() {
   const [users, setUsers] = useState([]);
   const [form, setForm] = useState(initialForm);
   const [filter, setFilter] = useState("");
-
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [dialog, setDialog] = useState(null);
 
   // =====================================
-  // LOAD ALL USERS
+  // LOAD USERS
   // =====================================
 
   const refresh = useCallback(async () => {
     setLoading(true);
 
     try {
-      const { data } = await api.get(
-        "/admin/manage-users"
-      );
+      const { data } = await api.get("/admin/manage-users");
 
       setUsers(data.users || []);
       setError("");
@@ -85,7 +69,7 @@ export default function ManageUsers() {
   );
 
   // =====================================
-  // CREATE USER
+  // CREATE NEW USER
   // =====================================
 
   const create = async (event) => {
@@ -98,19 +82,15 @@ export default function ManageUsers() {
     setNotice("");
 
     try {
-      const { data } = await api.post(
-        "/admin/manage-users",
-        {
-          full_name: form.full_name.trim(),
-          email: form.email.trim().toLowerCase(),
-          password: form.password,
-        }
-      );
+      const { data } = await api.post("/admin/manage-users", {
+        full_name: form.full_name.trim(),
+        email: form.email.trim().toLowerCase(),
+        password: form.password,
+      });
 
       setForm(initialForm);
-      setNotice(data.message);
-
       await refresh();
+      setNotice(data.message);
     } catch (err) {
       setError(readError(err));
     } finally {
@@ -119,107 +99,63 @@ export default function ManageUsers() {
   };
 
   // =====================================
-  // BAN OR UNBAN USER
+  // OPEN ACTION POPUP
   // =====================================
 
-  const ban = async (user, action, hours) => {
+  const openDialog = (user, action, hours = null) => {
     if (busy) return;
 
-    let reason = "";
+    setDialog({ user, action, hours });
+    setError("");
+    setNotice("");
+  };
 
-    if (action !== "UNBAN") {
-      const input = window.prompt(
-        `Reason for ${action.toLowerCase()} ban of ${user.email}:`
-      );
+  // =====================================
+  // CONFIRM ACTION + SEND EMAIL
+  // =====================================
 
-      if (input === null) return;
+  const submitDialog = async ({ reason, confirmEmail }) => {
+    if (!dialog || busy) return;
 
-      reason = input.trim();
+    setBusy(true);
+    setError("");
+    setNotice("");
 
-      if (reason.length < 3) {
-        setError(
-          "Please enter a reason of at least 3 characters."
+    try {
+      const userId = dialog.user.user_id;
+      let response;
+
+      if (dialog.action === "DELETE") {
+        response = await api.delete(
+          `/admin/manage-users/${userId}`,
+          {
+            data: {
+              confirm_email: confirmEmail,
+              reason,
+            },
+          }
         );
-        return;
+      } else {
+        response = await api.patch(
+          `/admin/manage-users/${userId}/ban`,
+          {
+            action: dialog.action,
+            hours: dialog.hours,
+            reason,
+          }
+        );
       }
-    }
 
-    const confirmed = window.confirm(
-      `${
-        action === "UNBAN"
-          ? "Unban"
-          : "Apply " + action.toLowerCase() + " ban to"
-      } ${user.email}?`
-    );
+      setDialog(null);
 
-    if (!confirmed) return;
-
-    setBusy(true);
-    setError("");
-    setNotice("");
-
-    try {
-      const { data } = await api.patch(
-        `/admin/manage-users/${user.user_id}/ban`,
-        {
-          action,
-          hours,
-          reason,
-        }
-      );
-
-      setNotice(data.message);
+      const emailMessage =
+        response.data.email_sent === true
+          ? "Email notification accepted by the provider."
+          : "The action succeeded, but the email could not be sent. Check Netlify logs.";
 
       await refresh();
-    } catch (err) {
-      setError(readError(err));
-    } finally {
-      setBusy(false);
-    }
-  };
 
-  // =====================================
-  // PERMANENTLY DELETE USER
-  // =====================================
-
-  const remove = async (user) => {
-    if (busy) return;
-
-    const typed = window.prompt(
-      `PERMANENT DELETE: type the full email ${user.email} to confirm:`
-    );
-
-    if (
-      typed === null ||
-      typed.trim().toLowerCase() !==
-        user.email.toLowerCase()
-    ) {
-      return;
-    }
-
-    const confirmed = window.confirm(
-      `Delete ${user.email} and their stored wellness records permanently? This cannot be undone.`
-    );
-
-    if (!confirmed) return;
-
-    setBusy(true);
-    setError("");
-    setNotice("");
-
-    try {
-      const { data } = await api.delete(
-        `/admin/manage-users/${user.user_id}`,
-        {
-          data: {
-            confirm_email: typed,
-          },
-        }
-      );
-
-      setNotice(data.message);
-
-      await refresh();
+      setNotice(`${response.data.message} ${emailMessage}`);
     } catch (err) {
       setError(readError(err));
     } finally {
@@ -233,6 +169,23 @@ export default function ManageUsers() {
 
   return (
     <div className="module-page staff-page">
+
+      {/* ACTION CONFIRMATION POPUP */}
+      {dialog && (
+        <AccountActionModal
+          key={`${dialog.user.user_id}-${dialog.action}-${dialog.hours || 0}`}
+          dialog={dialog}
+          busy={busy}
+          error={error}
+          onClose={() => {
+            if (!busy) {
+              setDialog(null);
+              setError("");
+            }
+          }}
+          onConfirm={submitDialog}
+        />
+      )}
 
       {/* HEADER */}
       <div className="module-header">
@@ -258,8 +211,8 @@ export default function ManageUsers() {
         </Link>
       </div>
 
-      {/* ERROR MESSAGE */}
-      {error && (
+      {/* ERROR */}
+      {error && !dialog && (
         <p
           className="staff-message staff-error"
           role="alert"
@@ -268,7 +221,7 @@ export default function ManageUsers() {
         </p>
       )}
 
-      {/* SUCCESS MESSAGE */}
+      {/* SUCCESS */}
       {notice && (
         <p
           className="staff-message staff-success"
@@ -279,7 +232,7 @@ export default function ManageUsers() {
       )}
 
       {/* =====================================
-          CREATE NEW USER
+          ADD USER MANUALLY
       ===================================== */}
 
       <section className="staff-panel">
@@ -293,10 +246,7 @@ export default function ManageUsers() {
           Use Manage Admins for administrator access.
         </p>
 
-        <form
-          className="staff-form"
-          onSubmit={create}
-        >
+        <form className="staff-form" onSubmit={create}>
           <label htmlFor="new-user-name">
             Full Name
           </label>
@@ -353,10 +303,7 @@ export default function ManageUsers() {
             }
           />
 
-          <button
-            type="submit"
-            disabled={busy}
-          >
+          <button type="submit" disabled={busy}>
             {busy ? "Working..." : "Create User"}
           </button>
         </form>
@@ -368,11 +315,10 @@ export default function ManageUsers() {
       </section>
 
       {/* =====================================
-          REGISTERED USER ACCOUNTS
+          REGISTERED ACCOUNTS
       ===================================== */}
 
       <section className="staff-panel">
-
         <div className="staff-title-row">
           <h2>Registered Accounts</h2>
 
@@ -399,10 +345,6 @@ export default function ManageUsers() {
           <Search size={17} />
 
           <input
-            style={{
-              flex: 1,
-              minWidth: 0,
-            }}
             type="search"
             value={filter}
             placeholder="Search users"
@@ -410,12 +352,16 @@ export default function ManageUsers() {
             onChange={(event) =>
               setFilter(event.target.value)
             }
+            style={{
+              flex: 1,
+              minWidth: 0,
+            }}
           />
         </div>
 
         <p className="staff-hint">
-          Showing {visible.length} of {users.length}
-          {" "}recent accounts (up to 300).
+          Showing {visible.length} of {users.length}{" "}
+          recent accounts (up to 300).
         </p>
 
         {/* USER TABLE */}
@@ -436,12 +382,9 @@ export default function ManageUsers() {
               <tbody>
                 {visible.map((user) => (
                   <tr key={user.user_id}>
-
-                    {/* USER INFORMATION */}
+                    {/* USER */}
                     <td>
-                      <strong>
-                        {user.full_name}
-                      </strong>
+                      <strong>{user.full_name}</strong>
 
                       <div
                         style={{
@@ -459,7 +402,7 @@ export default function ManageUsers() {
                       </span>
                     </td>
 
-                    {/* BAN STATUS */}
+                    {/* ACCOUNT STATUS */}
                     <td>
                       <strong>
                         {user.account_status}
@@ -481,7 +424,7 @@ export default function ManageUsers() {
                         )}
                     </td>
 
-                    {/* MANAGEMENT ACTIONS */}
+                    {/* MANAGEMENT BUTTONS */}
                     <td>
                       {user.role === "SUPER_ADMIN" ? (
                         <span className="staff-protected">
@@ -496,7 +439,6 @@ export default function ManageUsers() {
                             minWidth: 230,
                           }}
                         >
-
                           {/* UNBAN */}
                           {user.account_status !==
                             "ACTIVE" && (
@@ -504,19 +446,22 @@ export default function ManageUsers() {
                               type="button"
                               disabled={busy}
                               onClick={() =>
-                                ban(user, "UNBAN")
+                                openDialog(
+                                  user,
+                                  "UNBAN"
+                                )
                               }
                             >
                               Unban
                             </button>
                           )}
 
-                          {/* 1 DAY */}
+                          {/* BAN 1 DAY */}
                           <button
                             type="button"
                             disabled={busy}
                             onClick={() =>
-                              ban(
+                              openDialog(
                                 user,
                                 "TEMPORARY",
                                 24
@@ -526,12 +471,12 @@ export default function ManageUsers() {
                             Ban 1 Day
                           </button>
 
-                          {/* 7 DAYS */}
+                          {/* BAN 7 DAYS */}
                           <button
                             type="button"
                             disabled={busy}
                             onClick={() =>
-                              ban(
+                              openDialog(
                                 user,
                                 "TEMPORARY",
                                 168
@@ -541,12 +486,12 @@ export default function ManageUsers() {
                             Ban 7 Days
                           </button>
 
-                          {/* 30 DAYS */}
+                          {/* BAN 30 DAYS */}
                           <button
                             type="button"
                             disabled={busy}
                             onClick={() =>
-                              ban(
+                              openDialog(
                                 user,
                                 "TEMPORARY",
                                 720
@@ -561,24 +506,29 @@ export default function ManageUsers() {
                             type="button"
                             disabled={busy}
                             onClick={() =>
-                              ban(user, "PERMANENT")
+                              openDialog(
+                                user,
+                                "PERMANENT"
+                              )
                             }
                           >
                             Ban Permanently
                           </button>
 
-                          {/* DELETE */}
+                          {/* DELETE ACCOUNT */}
                           <button
                             type="button"
                             className="staff-demote"
                             disabled={busy}
                             onClick={() =>
-                              remove(user)
+                              openDialog(
+                                user,
+                                "DELETE"
+                              )
                             }
                           >
                             Delete Account
                           </button>
-
                         </div>
                       )}
                     </td>
