@@ -117,6 +117,18 @@ GameBalance is intended for educational and self-monitoring purposes. Its wellne
 
 GitHub: [github.com/D3NUW4NXD](https://github.com/D3NUW4NXD)
 
+
+---
+
+### ☕ Support
+
+If you like **GameBalance** or find this project useful, consider supporting my work by buying me a coffee. Your support helps me continue learning, developing, and building new projects.
+
+<a href="https://www.buymeacoffee.com/chathuradei" target="_blank">
+  <img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-FF8A65?style=for-the-badge&logo=buymeacoffee&logoColor=white" height="40" alt="Buy Me a Coffee"/>
+</a>
+
+
 ---
 
 **GameBalance — Play Smart. Live Balanced.**
