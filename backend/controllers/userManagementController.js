@@ -1,6 +1,7 @@
 
 const bcrypt = require("bcryptjs");
 const db = require("../config/db");
+const accountActionEmail = require("../services/accountActionEmail");
 
 const getId = (value) => {
   const id = Number(value);
@@ -22,7 +23,6 @@ const badServer = (res, label, error) => {
 // =====================================
 // LIST USER ACCOUNTS
 // =====================================
-
 exports.listUsers = async (req, res) => {
   const search = String(req.query.search || "")
     .trim()
@@ -31,19 +31,19 @@ exports.listUsers = async (req, res) => {
   try {
     const [users] = await db.query(
       `SELECT
-          user_id, full_name, email, role, created_at,
-          ban_type, ban_reason,
-          DATE_FORMAT(
-            ban_expires_at, '%Y-%m-%d %H:%i UTC'
-          ) AS ban_until_utc,
-          CASE
-            WHEN ban_type = 'PERMANENT'
-              THEN 'PERMANENT'
-            WHEN ban_type = 'TEMPORARY'
-              AND ban_expires_at > UTC_TIMESTAMP()
-              THEN 'TEMPORARY'
-            ELSE 'ACTIVE'
-          END AS account_status
+         user_id, full_name, email, role, created_at,
+         ban_type, ban_reason,
+         DATE_FORMAT(
+           ban_expires_at, '%Y-%m-%d %H:%i UTC'
+         ) AS ban_until_utc,
+         CASE
+           WHEN ban_type = 'PERMANENT'
+             THEN 'PERMANENT'
+           WHEN ban_type = 'TEMPORARY'
+             AND ban_expires_at > UTC_TIMESTAMP()
+             THEN 'TEMPORARY'
+           ELSE 'ACTIVE'
+         END AS account_status
        FROM users
        WHERE (
          ? = ''
@@ -64,7 +64,6 @@ exports.listUsers = async (req, res) => {
 // =====================================
 // CREATE REGULAR USER
 // =====================================
-
 exports.createUser = async (req, res) => {
   const fullName =
     typeof req.body?.full_name === "string"
@@ -108,6 +107,7 @@ exports.createUser = async (req, res) => {
 
     if (found.length) {
       await connection.rollback();
+
       return res.status(409).json({
         success: false,
         message: "Email already registered.",
@@ -136,7 +136,9 @@ exports.createUser = async (req, res) => {
         "User created. Share the initial password privately.",
     });
   } catch (error) {
-    if (connection) await connection.rollback();
+    if (connection) {
+      await connection.rollback().catch(() => {});
+    }
 
     if (error.code === "ER_DUP_ENTRY") {
       return res.status(409).json({
@@ -152,9 +154,8 @@ exports.createUser = async (req, res) => {
 };
 
 // =====================================
-// BAN OR UNBAN USER
+// BAN / UNBAN USER + EMAIL
 // =====================================
-
 exports.updateBan = async (req, res) => {
   const id = getId(req.params.userId);
   const action = req.body?.action;
@@ -184,18 +185,23 @@ exports.updateBan = async (req, res) => {
   }
 
   if (
-    action !== "UNBAN" &&
-    (reason.length < 3 || reason.length > 255)
+    reason.length > 255 ||
+    (action !== "UNBAN" && reason.length < 3)
   ) {
     return res.status(400).json({
       success: false,
-      message: "Reason must be 3–255 characters.",
+      message:
+        "Reason must be 3–255 characters (optional for unban).",
     });
   }
 
   if (
     action === "TEMPORARY" &&
-    (!Number.isInteger(hours) || hours < 1 || hours > 720)
+    (
+      !Number.isInteger(hours) ||
+      hours < 1 ||
+      hours > 720
+    )
   ) {
     return res.status(400).json({
       success: false,
@@ -203,13 +209,16 @@ exports.updateBan = async (req, res) => {
     });
   }
 
-  const connection = await db.getConnection();
+  let connection;
+  let recipient;
+  let banUntilUtc = null;
 
   try {
+    connection = await db.getConnection();
     await connection.beginTransaction();
 
     const [rows] = await connection.query(
-      `SELECT role
+      `SELECT role, email, full_name
        FROM users
        WHERE user_id = ?
        FOR UPDATE`,
@@ -234,20 +243,34 @@ exports.updateBan = async (req, res) => {
       });
     }
 
+    recipient = rows[0];
+
     if (action === "TEMPORARY") {
       await connection.query(
         `UPDATE users
          SET ban_type = 'TEMPORARY',
-             ban_expires_at =
-               DATE_ADD(
-                 UTC_TIMESTAMP(),
-                 INTERVAL ? HOUR
-               ),
+             ban_expires_at = DATE_ADD(
+               UTC_TIMESTAMP(),
+               INTERVAL ? HOUR
+             ),
              ban_reason = ?,
              token_version = token_version + 1
          WHERE user_id = ?`,
         [hours, reason, id]
       );
+
+      const [expiry] = await connection.query(
+        `SELECT DATE_FORMAT(
+           ban_expires_at,
+           '%Y-%m-%d %H:%i UTC'
+         ) AS until_utc
+         FROM users
+         WHERE user_id = ?`,
+        [id]
+      );
+
+      banUntilUtc = expiry[0]?.until_utc || null;
+
     } else if (action === "PERMANENT") {
       await connection.query(
         `UPDATE users
@@ -258,6 +281,7 @@ exports.updateBan = async (req, res) => {
          WHERE user_id = ?`,
         [reason, id]
       );
+
     } else {
       await connection.query(
         `UPDATE users
@@ -274,37 +298,69 @@ exports.updateBan = async (req, res) => {
       action === "TEMPORARY"
         ? `${hours} hour(s): ${reason}`
         : action === "UNBAN"
-          ? "Ban removed"
+          ? `Ban removed${reason ? ": " + reason : ""}`
           : reason;
 
     await connection.query(
       `INSERT INTO user_management_audit
          (actor_user_id, target_user_id, action, details)
        VALUES (?, ?, ?, ?)`,
-      [req.user.user_id, id, action, details]
+      [
+        req.user.user_id,
+        id,
+        action,
+        details.slice(0, 255),
+      ]
     );
 
     await connection.commit();
 
-    return res.json({
-      success: true,
-      message:
-        action === "UNBAN"
-          ? "User unbanned."
-          : "Ban applied. Existing sessions invalidated.",
-    });
   } catch (error) {
-    await connection.rollback();
+    if (connection) {
+      await connection.rollback().catch(() => {});
+    }
+
     return badServer(res, "Moderate user:", error);
+
   } finally {
-    connection.release();
+    if (connection) connection.release();
   }
+
+  // The ban/unban action is already saved.
+  // Email failure must not undo it.
+  let emailSent = false;
+
+  try {
+    await accountActionEmail({
+      to: recipient.email,
+      name: recipient.full_name,
+      action,
+      reason,
+      hours,
+      untilUtc: banUntilUtc,
+    });
+
+    emailSent = true;
+  } catch (error) {
+    console.error(
+      "Account moderation notification failed:",
+      error.message
+    );
+  }
+
+  return res.json({
+    success: true,
+    email_sent: emailSent,
+    message:
+      action === "UNBAN"
+        ? "User unbanned."
+        : "Ban applied. Existing sessions invalidated.",
+  });
 };
 
 // =====================================
-// PERMANENTLY DELETE USER
+// PERMANENTLY DELETE USER + EMAIL
 // =====================================
-
 exports.deleteUser = async (req, res) => {
   const id = getId(req.params.userId);
 
@@ -312,10 +368,23 @@ exports.deleteUser = async (req, res) => {
     req.body?.confirm_email || ""
   ).trim().toLowerCase();
 
+  const reason =
+    typeof req.body?.reason === "string"
+      ? req.body.reason.trim()
+      : "";
+
   if (!id || !emailValid(confirmation)) {
     return res.status(400).json({
       success: false,
       message: "Confirm the target account email.",
+    });
+  }
+
+  if (reason.length < 3 || reason.length > 255) {
+    return res.status(400).json({
+      success: false,
+      message:
+        "Enter a deletion message of 3–255 characters.",
     });
   }
 
@@ -326,13 +395,15 @@ exports.deleteUser = async (req, res) => {
     });
   }
 
-  const connection = await db.getConnection();
+  let connection;
+  let recipient;
 
   try {
+    connection = await db.getConnection();
     await connection.beginTransaction();
 
     const [rows] = await connection.query(
-      `SELECT email, role
+      `SELECT email, role, full_name
        FROM users
        WHERE user_id = ?
        FOR UPDATE`,
@@ -361,7 +432,9 @@ exports.deleteUser = async (req, res) => {
       });
     }
 
-    // Delete stress answers before their assessments.
+    recipient = rows[0];
+
+    // Delete stress answers before assessments.
     await connection.query(
       `DELETE FROM stress_answers
        WHERE assessment_id IN (
@@ -372,6 +445,7 @@ exports.deleteUser = async (req, res) => {
       [id]
     );
 
+    // Preserve the existing deletion logic.
     const tables = [
       "alerts",
       "risk_reports",
@@ -382,8 +456,9 @@ exports.deleteUser = async (req, res) => {
       "weekly_report_email_requests",
     ];
 
-    // Supporting tables may differ between deployments.
-    const placeholders = tables.map(() => "?").join(", ");
+    const placeholders = tables
+      .map(() => "?")
+      .join(", ");
 
     const [existingTables] = await connection.query(
       `SELECT table_name AS name
@@ -399,9 +474,9 @@ exports.deleteUser = async (req, res) => {
 
     for (const table of tables) {
       if (present.has(table)) {
-        // Names are from the fixed server-side list.
         await connection.query(
-          `DELETE FROM \`${table}\` WHERE user_id = ?`,
+          `DELETE FROM \`${table}\`
+           WHERE user_id = ?`,
           [id]
         );
       }
@@ -415,21 +490,20 @@ exports.deleteUser = async (req, res) => {
     await connection.query(
       `INSERT INTO user_management_audit
          (actor_user_id, target_user_id, action, details)
-       VALUES (
-         ?, ?, 'DELETE',
-         'Account and known related records removed'
-       )`,
-      [req.user.user_id, id]
+       VALUES (?, ?, 'DELETE', ?)`,
+      [
+        req.user.user_id,
+        id,
+        `Deleted: ${reason}`.slice(0, 255),
+      ]
     );
 
     await connection.commit();
 
-    return res.json({
-      success: true,
-      message: "Account permanently deleted.",
-    });
   } catch (error) {
-    await connection.rollback();
+    if (connection) {
+      await connection.rollback().catch(() => {});
+    }
 
     console.error("Delete user:", error);
 
@@ -439,12 +513,40 @@ exports.deleteUser = async (req, res) => {
       "ER_ROW_IS_REFERENCED",
     ].includes(error.code);
 
-    return res.status(dependencyError ? 409 : 500).json({
-      success: false,
-      message:
-        "Deletion was safely cancelled. Review dependent database tables and foreign keys before retrying.",
-    });
+    return res
+      .status(dependencyError ? 409 : 500)
+      .json({
+        success: false,
+        message:
+          "Deletion was safely cancelled. Review dependent database tables and foreign keys before retrying.",
+      });
+
   } finally {
-    connection.release();
+    if (connection) connection.release();
   }
+
+  // Save account first, notify former user afterward.
+  let emailSent = false;
+
+  try {
+    await accountActionEmail({
+      to: recipient.email,
+      name: recipient.full_name,
+      action: "DELETE",
+      reason,
+    });
+
+    emailSent = true;
+  } catch (error) {
+    console.error(
+      "Account deletion notification failed:",
+      error.message
+    );
+  }
+
+  return res.json({
+    success: true,
+    email_sent: emailSent,
+    message: "Account permanently deleted.",
+  });
 };
